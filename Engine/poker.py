@@ -86,17 +86,18 @@ class Poker:
 
             # Phases change once every player is folded or passing
             passing = False
-            i = activePlayerIndex
+            # i = activePlayerIndex
             while (not passing):
                 # Table turn cycle:
-                print(f"i = {i}")
-                # Set active player index
-                activePlayerIndex = (i) % players.__len__()
+
                 # Handle folded players
                 if playersFolding[activePlayerIndex]:
-                    print(f"Player {activePlayerIndex + 1} has folded.")
+                    print(f"Player {players[activePlayerIndex].id} has folded.")
                     playersPassing[activePlayerIndex] = True
-                    i += 1
+                    # Increment turn!
+                    activePlayerIndex += 1
+                    # Handle overflow
+                    activePlayerIndex = (activePlayerIndex) % players.__len__()
                     continue
                 # Print player interface
                 print(f"Player {players[activePlayerIndex].id}, it is your turn.")
@@ -237,7 +238,9 @@ Your options are:
                     print("Try again")
                     continue                
                 # Increment turn!
-                i += 1
+                activePlayerIndex += 1
+                # Handle overflow
+                activePlayerIndex = (activePlayerIndex) % players.__len__()
                 
                 # Check Condition!
                 passing = True

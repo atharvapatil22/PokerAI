@@ -11,19 +11,24 @@ class PokerPlayer:
         # Id for player number tracking (1-->?)
         self.id = id
 
+    # Adds the passed card to the player's hand
     def dealt(self, card):
         self.handCards.append(card)
     
+    # Replaces the player's community card knowledge with the passed array of cards
     def communityUpdate(self, cards):
         self.community = cards
 
+    # Removes the amount listed from the player's chips and returns it
     def bet(self, chips):
         self.chips -= chips
         return chips
     
+    # Adds the amount listed to the player's chips
     def wins(self,chips):
         self.chips += chips
 
+    # Returns a neat string of the player's hand of cards
     def hand(self):
         temp = "["
         for card in self.handCards:
@@ -31,75 +36,56 @@ class PokerPlayer:
         temp = temp[:-2] + "]"
         return temp
     
+    # Returns the score of the best hand the player can make given their hand and the community cards
     def handScore(self):
+        # Consolidate cards
         cards = self.handCards + self.community
 
-        temp = []
-        suits = []
+
         SUITS = ["Spades", "Clubs", "Diamonds", "Hearts"]
+        
+        # Create vals and suits arrays for easier parsing and scoring
+        vals = []
+        suits = []
         for card in cards:
-            temp.append(card.value)
+            vals.append(card.value)
             suits.append(card.suit)
-        temp.sort()
-        cards.sort(key=lambda x: x.value)
+        vals.sort()
+
+        # Note High Card
+        HIGH_CARD = vals[-1]
+
         
-        
-
-        # Check for Straight
-        STRAIGHT = False
-
-        streak = 0
-        streakMax = 0
-        STRAIGHT_HIGH = 0
-        streakSet = [temp[0]]
-        streakSetMax = []
-        for i in range(12):
-            j = i % 7
-            h = (i + 1) % 7
-            diff = 0
-            if temp[j] == 14:
-                diff = temp[h]-1
-            else:
-                diff = temp[h]-temp[j]
-            if diff == 1:
-                streak += 1
-                streakSet.append(temp[h])
-                if streak > streakMax:
-                    streakMax = streak
-                    streakSetMax = streakSet
-            elif diff == 0:
-                streak += 0
-            else:
-                streak = 1
-                streakSet = [temp[h]]
-        streakSetMax.sort()
-        if streakMax >= 5:
-            STRAIGHT = True
-        STRAIGHT_HIGH = streakSetMax[-1]
-
-            
-    
-
         
 
 
         # Check for Flush
+        # Initialize variables
+        # Marker
         FLUSH = False
+        # NOT NEEDED REMOVE SOON
         FLUSH_HIGH = 0
+        # Suit of the flush, stored for use in straight flush detection
         FLUSH_SUIT = ""
+        # Set of the flush cards, used for finding the highest 5 cards in the flush
         flushSet = []
+        # For each suit
         for suit in SUITS:
+            # If there are 5 or more of that suit
             if suits.count(suit) >=5:
+                # Update variables
                 FLUSH = True
                 FLUSH_SUIT = suit
+                # Add the variables to the flush set
                 for card in cards:
                     if card.suit == suit and card.value > FLUSH_HIGH:
                         FLUSH_HIGH = card.value
                     if card.suit == suit:
                         flushSet.append(card.value)
+                break
+        # Reverse sort the flush set for scoring convenience
         flushSet.sort(reverse=True)
 
-            
             
         # Check for 4 of a kind
         FOUR_KIND = False
@@ -113,30 +99,40 @@ class PokerPlayer:
         # Check for 2 pairs
         TWO_PAIRS = False
         TWO_PAIRS_HIGH = 0
+        # val takes on values 2 through 14 (2 through Ace)
         for i in range(13):
             val = i + 2
-            if temp.count(val) == 4:
+            if vals.count(val) == 4:
                 FOUR_KIND = True
                 FOUR_KIND_VAL = val
-            elif temp.count(val) == 3:
+            elif vals.count(val) == 3:
                 THREE_KIND = True
                 THREE_KIND_VAL = val
-            elif temp.count(val) == 2:
+            elif vals.count(val) == 2:
+                # If two pairs have already been detected, shift the values down
                 if TWO_PAIRS:
+                    # Two kind val becomes the old two pairs high val
                     TWO_KIND_VAL = TWO_PAIRS_HIGH
+                    # Two pairs high val becomes the current value
                     TWO_PAIRS_HIGH = val
+                # If only one pair has already been detected, store the current value in the two pairs high val
                 elif TWO_KIND:
                     TWO_PAIRS = True
                     TWO_PAIRS_HIGH = val
+                # Otherwise, update two kind val
                 else:
                     TWO_KIND = True
                     TWO_KIND_VAL = val
         
     
         # Check for Full house
+        # Marker
         FULL_HOUSE = False
+        # Value of the triple
         FULL_HOUSE_HIGH = 0
+        # Value of the double
         FULL_HOUSE_LOW = 0
+        # Take the highest value pair as your double if there are two
         if THREE_KIND and TWO_PAIRS:
             FULL_HOUSE = True
             FULL_HOUSE_HIGH = THREE_KIND_VAL
@@ -147,48 +143,134 @@ class PokerPlayer:
             FULL_HOUSE_LOW = TWO_KIND_VAL
 
         
-        # Note High Card
-        HIGH_CARD = temp[-1]
+        # WARNING: THE STRAIGHT LOGIC HERE IS WRONG, ACE CANNOT BRIDGE KING AND TWO IN A STRAIGHT
+        
+        # Check for Straight
+        # Initialize variables
+        # Marker
+        STRAIGHT = False
+        # Highest card in the straight
+        STRAIGHT_HIGH = 0
+        # Temporary streak storage
+        streak = 0
+        # Max streak recorded
+        streakMax = 0
+        # Temporary streak set storage
+        streakSet = [vals[0]]
+        # Max streak set recorded (used for finding the straight high card)
+        streakSetMax = []
+        for i in range(12):
+            # Look at two cards at a time
+            # j is the first (lower)
+            j = i % 7
+            # h is the second (higher)
+            h = (i + 1) % 7
+            # initialize diff
+            diff = 0
+            # If our FIRST card is an ace, treat it like a 1
+            if vals[j] == 14:
+                diff = vals[h]-1
+            # Otherwise get the diff normally
+            else:
+                diff = vals[h]-vals[j]
+            # If our diff is 1 (sequential pair)
+            if diff == 1:
+                # If our first card is Ace, we break the chain
+                # (Ace cannot act as BOTH 1 and 14 in the same straight)
+                if vals[j] == 14:
+                    streak = 2
+                    streakSet = [vals[j], vals[h]]
+                # Otherwise, increment the streak counter and append to the streak set
+                else:
+                    streak += 1
+                    streakSet.append(vals[h])
+                # If this is the longest streak so far, update the max values
+                if streak > streakMax:
+                    streakMax = streak
+                    streakSetMax = streakSet
+            # If these are duplicates, no change
+            elif diff == 0:
+                streak += 0
+            # If not sequential or duplicates, break the chain and start again
+            else:
+                streak = 1
+                streakSet = [vals[h]]
+        # If the streak is 5 or more, we have a straight
+        if streakMax >= 5:
+            STRAIGHT = True
+        STRAIGHT_HIGH = streakSetMax[-1]
+
+
+        # Sort cards for straight flush checking
+        cards.sort(key=lambda x: x.value)
+
+        # WARNING: THE STRAIGHT LOGIC HERE IS WRONG, ACE CANNOT BRIDGE KING AND TWO IN A STRAIGHT
 
         # Check for straight flush
+        # Initialize variables
+        # Marker
         STRAIGHT_FLUSH = False
+        # Highest card in the straight flush
         STRAIGHT_FLUSH_HIGH = 0
+        # Subset of cards all of the suit of the flush
         flushCards = []
+        # Only calculate if a flush is present
         if FLUSH:
             for i in range(7):
-                if not cards[i].suit == FLUSH_SUIT:
+                if cards[i].suit == FLUSH_SUIT:
                     # cards.pop(i)
                     flushCards.append(cards[i])
             
             flushStreak = 0
+            # Temporary streak storage
             flushStreakMax = 0
+            # Max streak recorded
             flushStreakSet = [flushCards[0]]
+            # Temporary streak set storage
             flushStreakSetMax = []
+            # Max streak set recorded (used for finding the straight high card)
             for i in range(flushCards.__len__() * 2):
+                # Look at two cards at a time
+                # j is the first (lower)
                 j = i % flushCards.__len__()
+                # h is the second (higher)
                 h = (i + 1) % flushCards.__len__()
+                # initialize diff
                 diff = 0
+                
+                # If our FIRST card is an ace, treat it like a 1
                 if flushCards[j].value == 14:
                     diff = flushCards[h].value - 1
+                # Otherwise get the diff normally
                 else:
                     diff = flushCards[h].value - flushCards[j].value
                 
                 if diff == 1:
-                    flushStreak += 1
-                    flushStreakSet.append(flushCards[h].value)
+                    # If our first card is Ace, we break the chain
+                    # (Ace cannot act as BOTH 1 and 14 in the same straight)
+                    if flushCards[j].value == 14:
+                        flushStreak = 2
+                        flushStreakSet = [flushCards[j].value,flushCards[h].value]
+                    # Otherwise, increment the streak counter and append to the streak set
+                    else:
+                        flushStreak += 1
+                        flushStreakSet.append(flushCards[h].value)
+                    # If this is the longest streak so far, update the max values
                     if flushStreak > flushStreakMax:
                         flushStreakMax = flushStreak
                         flushStreakSetMax = flushStreakSet
+                # If these are duplicates, no change
+                # This should never happen, because it would require two cards of the same suit and value...
                 elif diff == 0:
                     flushStreak += 0
+                # If not sequential or duplicates, break the chain and start again
                 else:
                     flushStreak = 1
                     flushStreakSet = [flushCards[h].value]
                 
+            # If the streak is 5 or more, we have a straight
             if flushStreakMax >= 5:
                 STRAIGHT_FLUSH = True
-            flushStreakSetMax.sort()
-            # CURRENTLY DOES NOT COUNT FOR ROYAL FLUSH PROPERLY
             STRAIGHT_FLUSH_HIGH = flushStreakSetMax[-1]
             
 
@@ -240,6 +322,4 @@ class PokerPlayer:
 
         # Ties will be broken by whichever player has the higher cards in hand
         return score
-        
-
         

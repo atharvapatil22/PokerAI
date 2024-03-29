@@ -184,7 +184,7 @@ Your options are:
                     # Disable checking if enabled
                     if checkFlag:
                         checkFlag = False
-                        for i in playersPassing.__len__():
+                        for i in range(playersPassing.__len__()):
                             playersPassing[i] = False
                 elif action == "LOW_BET":
                     # Calculate player bet
@@ -204,7 +204,7 @@ Your options are:
                     # Disable checking if enabled
                     if checkFlag:
                         checkFlag = False
-                        for i in playersPassing.__len__():
+                        for i in range(playersPassing.__len__()):
                             playersPassing[i] = False
                 elif action == "MID_BET":
                     # Calculate player bet
@@ -224,7 +224,7 @@ Your options are:
                     # Disable checking if enabled
                     if checkFlag:
                         checkFlag = False
-                        for i in playersPassing.__len__():
+                        for i in range(playersPassing.__len__()):
                             playersPassing[i] = False
                 elif action == "HGH_BET":
                     # Calculate player bet
@@ -244,7 +244,7 @@ Your options are:
                     # Disable checking if enabled
                     if checkFlag:
                         checkFlag = False
-                        for i in playersPassing.__len__():
+                        for i in range(playersPassing.__len__()):
                             playersPassing[i] = False
                 elif action == "ALL_IN":
                     # Calculate player bet
@@ -261,14 +261,14 @@ Your options are:
                     # Disable checking if enabled
                     if checkFlag:
                         checkFlag = False
-                        for i in playersPassing.__len__():
+                        for i in range(playersPassing.__len__()):
                             playersPassing[i] = False
                 elif action == "CALL":
                     # Calculate player bet
                     playerBet = incomingBet
                     # Can the player call?
-                    if incomingBet == 0:
-                        print("You cannot call when the incoming bet is 0")
+                    if checkFlag and incomingBet == 0:
+                        print("You cannot call when the phase bet is 0")
                         continue
                     # Do they have sufficient chips?
                     elif playerBet > players[activePlayerIndex].chips:
@@ -282,7 +282,7 @@ Your options are:
                     pot += players[activePlayerIndex].bet(playerBet)
                 elif action == "CHECK":
                     # Can the player check?
-                    if (not checkFlag) and incomingBet != 0:
+                    if (not checkFlag) or incomingBet != 0:
                         print("You must call, raise, or fold")
                         continue
                     # Passing

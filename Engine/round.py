@@ -255,13 +255,13 @@ class Round:
             # Handle phase change
             # Phase 1-->2 Preflop --> Flop
             if phase == 1:
-                self.board.community.append(deck.top())
-                self.board.community.append(deck.top())
-                self.board.community.append(deck.top())
+                self.board.community.append(self.deck.top())
+                self.board.community.append(self.deck.top())
+                self.board.community.append(self.deck.top())
             # Phase 2-->3 Flop --> Turn
             # Phase 3-->4 Turn --> River
             elif phase == 2 or phase == 3:
-                self.board.community.append(deck.top())
+                self.board.community.append(self.deck.top())
             # Phase 4-->5 River --> Scores
             elif phase == 4:
                 print("Time for the results!")

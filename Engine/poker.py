@@ -23,7 +23,6 @@ class Poker:
     def runRound(self):
         # Define some variables
         deck = Deck()
-        deck.shuffle()
         players = self.players
         playersPassing = []
         playersFolding = []

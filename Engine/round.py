@@ -11,7 +11,6 @@ class Round:
 
     def runRound(self):
         # Define some variables
-        deck = Deck()
         players = self.players
         playersPassing = []
         playersFolding = []
@@ -44,7 +43,7 @@ class Round:
 
         # Deal cards
         for i in range(players.__len__() * 2):
-            players[(i+1+self.buttonPlayerIndex) % players.__len__()].dealt(deck.top())
+            players[(i+1+self.buttonPlayerIndex) % players.__len__()].dealt(self.deck.top())
         
         # Setup state arraylists
         playerBets = []

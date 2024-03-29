@@ -25,8 +25,10 @@ class Poker:
     def runGame(self):
         # Rounds continue until only one player is left
         # That player is the winner
-        round = Round(self.players, self.minBet, self.buttonPlayerIndex)
+       
         while self.players.__len__() > 1:
+            deck = Deck()
+            round = Round(self.players, deck, self.minBet, self.buttonPlayerIndex)
             self.players = round.runRound()
         
         print(f"THE WINNER IS: PLAYER {self.players[0].id}")

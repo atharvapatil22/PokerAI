@@ -4,7 +4,7 @@ import random
 class Deck:
     SUITS = ["Spades", "Clubs", "Diamonds", "Hearts"]
 
-    def init(self, shuffleFlag = True, deckSequence = None):
+    def __init__(self, shuffleFlag = True, deckSequence = None):
         self.cards = []
         if shuffleFlag:
             for suit in self.SUITS :

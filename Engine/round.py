@@ -1,5 +1,6 @@
 from realPlayer import RealPlayer
 from deck import Deck
+from realPlayer import Action
 
 class Round:
     class Board:
@@ -28,6 +29,64 @@ class Round:
         self.board = self.Board(players,self.minBet)
         self.checkFlag = True
 
+    # Function will place Min/Low/Mid/High bet if the player has enough chips & will return true. If player does not have enough chips, it will return false
+    def handleBetIfValid(self,action,activePlayerIndex,incomingBet):
+        # Calculate player bet
+        if action == Action.MIN_BET:
+            playerBet = incomingBet + self.minBet
+        elif action == Action.LOW_BET:
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.1 if self.players[activePlayerIndex].chips * 0.1 > self.minBet else self.minBet
+        elif action == Action.MID_BET:
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.4 if self.players[activePlayerIndex].chips * 0.4 > self.minBet else self.minBet
+        elif action == Action.HIGH_BET:
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.7 if self.players[activePlayerIndex].chips * 0.7 > self.minBet else self.minBet
+
+        # Do they have sufficient chips?
+        if playerBet > self.players[activePlayerIndex].chips:
+            print("Not enough chips")
+            return False
+
+        # Update the stored player bet thus far
+        self.board.playerBets[activePlayerIndex] += playerBet
+
+        # Update the current bet
+        self.board.currentBet = self.board.playerBets[activePlayerIndex]
+
+        # Not passing
+        self.board.playersPassing[activePlayerIndex] = False
+
+        # Update the pot
+        self.board.pot += self.players[activePlayerIndex].bet(playerBet)
+
+        # Disable checking if enabled
+        if self.checkFlag:
+            self.checkFlag = False
+            for i in range(self.board.playersPassing.__len__()):
+                self.board.playersPassing[i] = False
+        return True
+
+    def handleAllIn(self,activePlayerIndex,incomingBet):
+        # Calculate player bet
+        playerBet = self.players[activePlayerIndex].chips
+
+        # Update the stored player bet thus far
+        self.board.playerBets[activePlayerIndex] += playerBet
+
+        # Update the current bet
+        if self.board.playerBets[activePlayerIndex] > self.board.currentBet:
+            self.board.currentBet = self.board.playerBets[activePlayerIndex]
+
+        # Passing if they have 0 chips remaining (have already all-inned)
+        self.board.playersPassing[activePlayerIndex] = False if self.players[activePlayerIndex].chips > 0 else True
+
+        # Update the pot
+        self.board.pot += self.players[activePlayerIndex].bet(playerBet)
+
+        # Disable checking if enabled
+        if self.checkFlag:
+            self.checkFlag = False
+            for i in range(self.board.playersPassing.__len__()):
+                self.board.playersPassing[i] = False
 
     def runRound(self):
         # Define some variables
@@ -127,52 +186,10 @@ class Round:
                 # the class recieves it's rework.
 
                 # Handle player action
-                if action == "MIN_BET":
-                    if (self.min_bet(incomingBet) == 1):
+                if action in [Action.MIN_BET,Action.LOW_BET,Action.MID_BET,Action.HIGH_BET]:
+                    # If bet is not valid, we will continue with the while loop
+                    if not self.handleBetIfValid(action,self.board.activePlayerIndex,incomingBet):
                         continue
-                elif action == "LOW_BET":
-                    if (self.low_bet(incomingBet) == 1):
-                        continue
-                elif action == "MID_BET":
-                    # Calculate player bet
-                    playerBet = incomingBet + self.players[self.board.activePlayerIndex].chips * 0.4 if self.players[self.board.activePlayerIndex].chips * 0.4 > self.minBet else self.minBet
-                    # Do they have sufficient chips?
-                    if playerBet > self.players[self.board.activePlayerIndex].chips:
-                        print("Not enough chips")
-                        continue
-                    # Update the stored player bet thus far
-                    self.board.playerBets[self.board.activePlayerIndex] += playerBet
-                    # Update the current bet
-                    self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
-                    # Not passing
-                    self.board.playersPassing[self.board.activePlayerIndex] = False
-                    # Update the pot
-                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
-                    # Disable checking if enabled
-                    if self.checkFlag:
-                        self.checkFlag = False
-                        for i in range(self.board.playersPassing.__len__()):
-                            self.board.playersPassing[i] = False
-                elif action == "HGH_BET":
-                    # Calculate player bet
-                    playerBet = incomingBet + self.players[self.board.activePlayerIndex].chips * 0.7 if self.players[self.board.activePlayerIndex].chips * 0.7 > self.minBet else self.minBet
-                    # Do they have sufficient chips?
-                    if playerBet > self.players[self.board.activePlayerIndex].chips:
-                        print("Not enough chips")
-                        continue
-                    # Update the stored player bet thus far
-                    self.board.playerBets[self.board.activePlayerIndex] += playerBet
-                    # Update the current bet
-                    self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
-                    # Not passing
-                    self.board.playersPassing[self.board.activePlayerIndex] = False
-                    # Update the pot
-                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
-                    # Disable checking if enabled
-                    if self.checkFlag:
-                        self.checkFlag = False
-                        for i in range(self.board.playersPassing.__len__()):
-                            self.board.playersPassing[i] = False
                 elif action == "ALL_IN":
                     # Calculate player bet
                     playerBet = self.players[self.board.activePlayerIndex].chips
@@ -399,46 +416,4 @@ class Round:
 
         return
     
-
-    def min_bet(self, incomingBet):
-        # Calculate player bet
-        playerBet = incomingBet + self.minBet
-        # Do they have sufficient chips?
-        if playerBet > self.players[self.board.activePlayerIndex].chips:
-            print("Not enough chips")
-            return 1
-        # Update the stored player bet thus far
-        self.board.playerBets[self.board.activePlayerIndex] += playerBet
-        # Update the current bet
-        self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
-        # Not passing
-        self.board.playersPassing[self.board.activePlayerIndex] = False
-        # Update the pot
-        self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
-        # Disable checking if enabled
-        if self.checkFlag:
-            self.checkFlag = False
-            for i in range(self.board.playersPassing.__len__()):
-                self.board.playersPassing[i] = False
-        return 0
-    def low_bet(self, incomingBet):
-        # Calculate player bet
-        playerBet = incomingBet + self.players[self.board.activePlayerIndex].chips * 0.1 if self.players[self.board.activePlayerIndex].chips * 0.1 > self.minBet else self.minBet
-        # Do they have sufficient chips?
-        if playerBet > self.players[self.board.activePlayerIndex].chips:
-            print("Not enough chips")
-            return 1
-        # Update the stored player bet thus far
-        self.board.playerBets[self.board.activePlayerIndex] += playerBet
-        # Update the current bet
-        self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
-        # Not passing
-        self.board.playersPassing[self.board.activePlayerIndex] = False
-        # Update the pot
-        self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
-        # Disable checking if enabled
-        if self.checkFlag:
-            self.checkFlag = False
-            for i in range(self.board.playersPassing.__len__()):
-                self.board.playersPassing[i] = False
-        return 0
+    

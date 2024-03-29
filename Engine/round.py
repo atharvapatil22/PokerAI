@@ -26,51 +26,49 @@ class Round:
         self.minBet = minibet
         self.buttonPlayerIndex = 0
         self.board = self.Board(players,self.minBet)
+        self.checkFlag = True
 
 
     def runRound(self):
         # Define some variables
-        deck = Deck()
-        players = self.players
       
-        for i in range(players.__len__()):
+        for i in range(self.players.__len__()):
             self.board.playersFolding.append(False)
    
         phase = 0
-        checkFlag = True
 
 
         # Small and Big blinds mandatory pay in
         # Normal Poker
-        if players.__len__() > 2:
+        if self.players.__len__() > 2:
             # Small blind
-            self.board.pot += players[(self.buttonPlayerIndex + 1) % players.__len__()].bet(self.minBet / 2)
+            self.board.pot += self.players[(self.buttonPlayerIndex + 1) % self.players.__len__()].bet(self.minBet / 2)
             # Big blind
-            self.board.pot += players[(self.buttonPlayerIndex + 2) % players.__len__()].bet(self.minBet)
+            self.board.pot += self.players[(self.buttonPlayerIndex + 2) % self.players.__len__()].bet(self.minBet)
             # Under the gun
-            self.board.activePlayerIndex = (self.buttonPlayerIndex + 3) % players.__len__()
+            self.board.activePlayerIndex = (self.buttonPlayerIndex + 3) % self.players.__len__()
         # HEADS UP POKER
         else:
             # Dealer is small blind
-            self.board.pot += players[(self.buttonPlayerIndex) % players.__len__()].bet(self.minBet / 2)
+            self.board.pot += self.players[(self.buttonPlayerIndex) % self.players.__len__()].bet(self.minBet / 2)
             # Other is big blind
-            self.board.pot += players[(self.buttonPlayerIndex + 1) % players.__len__()].bet(self.minBet)
+            self.board.pot += self.players[(self.buttonPlayerIndex + 1) % self.players.__len__()].bet(self.minBet)
             # Dealer is under the gun
-            self.board.activePlayerIndex = (self.buttonPlayerIndex) % players.__len__()
+            self.board.activePlayerIndex = (self.buttonPlayerIndex) % self.players.__len__()
 
         # Deal cards
-        for i in range(players.__len__() * 2):
-            players[(i+1+self.buttonPlayerIndex) % players.__len__()].dealt(deck.top())
+        for i in range(self.players.__len__() * 2):
+            self.players[(i+1+self.buttonPlayerIndex) % self.players.__len__()].dealt(self.deck.top())
         
         
 
         
-        if players.__len__() > 2:
-            self.board.playerBets[(self.buttonPlayerIndex + 1) % players.__len__()] = self.minBet / 2
-            self.board.playerBets[(self.buttonPlayerIndex + 2) % players.__len__()] = self.minBet
+        if self.players.__len__() > 2:
+            self.board.playerBets[(self.buttonPlayerIndex + 1) % self.players.__len__()] = self.minBet / 2
+            self.board.playerBets[(self.buttonPlayerIndex + 2) % self.players.__len__()] = self.minBet
         else: 
             self.board.playerBets[self.buttonPlayerIndex] = self.minBet / 2
-            self.board.playerBets[(self.buttonPlayerIndex + 1) % players.__len__()] = self.minBet
+            self.board.playerBets[(self.buttonPlayerIndex + 1) % self.players.__len__()] = self.minBet
 
         # Phases:
         # Phase 1: no community cards
@@ -84,14 +82,14 @@ class Round:
             # Checking is enabled at the start of each phase
             # Exception, you cannot check unless the incoming bet is 0,
             # meaning that only the big-blind can check in the pre-flop
-            checkFlag = True
+    
 
-            for i in range(players.__len__()):
+            for i in range(self.players.__len__()):
                 if not self.board.playersFolding[i]:
                     self.board.playersPassing[i] = False
             # Handle the small blind going first in every phase after the first
             if not phase == 1:
-                if players.__len__() > 2:
+                if self.players.__len__() > 2:
                     self.board.activePlayerIndex = self.buttonPlayerIndex + 1
                 else:
                     self.board.activePlayerIndex = self.buttonPlayerIndex
@@ -104,54 +102,20 @@ class Round:
 
                 # Handle folded players
                 if self.board.playersFolding[self.board.activePlayerIndex]:
-                    print(f"Player {players[self.board.activePlayerIndex].id} has folded.")
+                    # print(f"Player {players[self.board.activePlayerIndex].id} has folded.")
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                     # Increment turn!
                     self.board.activePlayerIndex += 1
                     # Handle overflow
-                    self.board.activePlayerIndex = (self.board.activePlayerIndex) % players.__len__()
+                    self.board.activePlayerIndex = (self.board.activePlayerIndex) % self.players.__len__()
                     continue
                 # Print player interface
-                print(f"Player {players[self.board.activePlayerIndex].id}, it is your turn.")
+                # print(f"Player {players[self.board.activePlayerIndex].id}, it is your turn.")
 
                 # REFNOTE: This sequence of code is reused elsewhere, it would be a good method for the round class
-                communityString = "["
-                for card in self.board.community:
-                    communityString += f"{card}, "
-                if self.board.community.__len__() > 0:
-                    communityString = communityString[:-2] + "]"
-                else:
-                    communityString += "]"
-                
-                # Display relevant information to the user
-                print(f"The pot is: {self.board.pot}.")
-                print(f"The community cards are: {communityString}.")
-                print(f"Your hand is: {players[self.board.activePlayerIndex].hand()}.")
-                print(f"You have {players[self.board.activePlayerIndex].chips} chips left.")
-                print(f"You have bet {self.board.playerBets[self.board.activePlayerIndex]}.")
-                print(f"The current bet is {self.board.currentBet}.")
                 incomingBet = self.board.currentBet - self.board.playerBets[self.board.activePlayerIndex]
-                print(f"The incoming bet is {incomingBet}.")
-                # LOW_BET = 10%
-                # MID_BET = 40%
-                # HGH_BET = 70%
-                # ALL_IN  = 100%
-                # CALL = CHECK = Up to current bet
-                # FOLD = drop out
-                print(f'''
-Your options are:
-    MIN_BET ({incomingBet} + {self.minBet} = {incomingBet + self.minBet}) (raise)
-    LOW_BET ({incomingBet} + {players[self.board.activePlayerIndex].chips * 0.1 if players[self.board.activePlayerIndex].chips * 0.1 > self.minBet else self.minBet} = {incomingBet + players[self.board.activePlayerIndex].chips * 0.1 if players[self.board.activePlayerIndex].chips * 0.1 > self.minBet else self.minBet}) (raise)
-    MID_BET ({incomingBet} + {players[self.board.activePlayerIndex].chips * 0.4 if players[self.board.activePlayerIndex].chips * 0.4 > self.minBet else self.minBet} = {incomingBet + players[self.board.activePlayerIndex].chips * 0.4 if players[self.board.activePlayerIndex].chips * 0.1 > self.minBet else self.minBet}) (raise)
-    HGH_BET ({incomingBet} + {players[self.board.activePlayerIndex].chips * 0.7 if players[self.board.activePlayerIndex].chips * 0.7 > self.minBet else self.minBet} = {incomingBet + players[self.board.activePlayerIndex].chips * 0.7 if players[self.board.activePlayerIndex].chips * 0.1 > self.minBet else self.minBet}) (raise)
-    ALL_IN  ({players[self.board.activePlayerIndex].chips})
-    CALL ({incomingBet}) (cannot perform when the incoming bet is 0)
-    CHECK (only if incoming bet is 0 and no players have bet or raised before you)
-    FOLD (drop out)
-                    ''')
-                # Request player action
-                action = input("What will you do? (not case sensitive)\n")
-                action = action.upper()
+                action = self.players[self.board.activePlayerIndex].get_action(self.board)
+               
                 
                 # REFNOTE: The handling of player actions definitely should be handled by methods.
                 # A lot of the functionality is the same between them, or at least pretty similar,
@@ -164,50 +128,16 @@ Your options are:
 
                 # Handle player action
                 if action == "MIN_BET":
-                    # Calculate player bet
-                    playerBet = incomingBet + self.minBet
-                    # Do they have sufficient chips?
-                    if playerBet > players[self.board.activePlayerIndex].chips:
-                        print("Not enough chips")
+                    if (self.min_bet(incomingBet) == 1):
                         continue
-                    # Update the stored player bet thus far
-                    self.board.playerBets[self.board.activePlayerIndex] += playerBet
-                    # Update the current bet
-                    self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
-                    # Not passing
-                    self.board.playersPassing[self.board.activePlayerIndex] = False
-                    # Update the pot
-                    self.board.pot += players[self.board.activePlayerIndex].bet(playerBet)
-                    # Disable checking if enabled
-                    if checkFlag:
-                        checkFlag = False
-                        for i in range(self.board.playersPassing.__len__()):
-                            self.board.playersPassing[i] = False
                 elif action == "LOW_BET":
-                    # Calculate player bet
-                    playerBet = incomingBet + players[self.board.activePlayerIndex].chips * 0.1 if players[self.board.activePlayerIndex].chips * 0.1 > self.minBet else self.minBet
-                    # Do they have sufficient chips?
-                    if playerBet > players[self.board.activePlayerIndex].chips:
-                        print("Not enough chips")
+                    if (self.low_bet(incomingBet) == 1):
                         continue
-                    # Update the stored player bet thus far
-                    self.board.playerBets[self.board.activePlayerIndex] += playerBet
-                    # Update the current bet
-                    self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
-                    # Not passing
-                    self.board.playersPassing[self.board.activePlayerIndex] = False
-                    # Update the pot
-                    self.board.pot += players[self.board.activePlayerIndex].bet(playerBet)
-                    # Disable checking if enabled
-                    if checkFlag:
-                        checkFlag = False
-                        for i in range(self.board.playersPassing.__len__()):
-                            self.board.playersPassing[i] = False
                 elif action == "MID_BET":
                     # Calculate player bet
-                    playerBet = incomingBet + players[self.board.activePlayerIndex].chips * 0.4 if players[self.board.activePlayerIndex].chips * 0.4 > self.minBet else self.minBet
+                    playerBet = incomingBet + self.players[self.board.activePlayerIndex].chips * 0.4 if self.players[self.board.activePlayerIndex].chips * 0.4 > self.minBet else self.minBet
                     # Do they have sufficient chips?
-                    if playerBet > players[self.board.activePlayerIndex].chips:
+                    if playerBet > self.players[self.board.activePlayerIndex].chips:
                         print("Not enough chips")
                         continue
                     # Update the stored player bet thus far
@@ -217,17 +147,17 @@ Your options are:
                     # Not passing
                     self.board.playersPassing[self.board.activePlayerIndex] = False
                     # Update the pot
-                    self.board.pot += players[self.board.activePlayerIndex].bet(playerBet)
+                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
                     # Disable checking if enabled
-                    if checkFlag:
-                        checkFlag = False
+                    if self.checkFlag:
+                        self.checkFlag = False
                         for i in range(self.board.playersPassing.__len__()):
                             self.board.playersPassing[i] = False
                 elif action == "HGH_BET":
                     # Calculate player bet
-                    playerBet = incomingBet + players[self.board.activePlayerIndex].chips * 0.7 if players[self.board.activePlayerIndex].chips * 0.7 > self.minBet else self.minBet
+                    playerBet = incomingBet + self.players[self.board.activePlayerIndex].chips * 0.7 if self.players[self.board.activePlayerIndex].chips * 0.7 > self.minBet else self.minBet
                     # Do they have sufficient chips?
-                    if playerBet > players[self.board.activePlayerIndex].chips:
+                    if playerBet > self.players[self.board.activePlayerIndex].chips:
                         print("Not enough chips")
                         continue
                     # Update the stored player bet thus far
@@ -237,38 +167,38 @@ Your options are:
                     # Not passing
                     self.board.playersPassing[self.board.activePlayerIndex] = False
                     # Update the pot
-                    self.board.pot += players[self.board.activePlayerIndex].bet(playerBet)
+                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
                     # Disable checking if enabled
-                    if checkFlag:
-                        checkFlag = False
+                    if self.checkFlag:
+                        self.checkFlag = False
                         for i in range(self.board.playersPassing.__len__()):
                             self.board.playersPassing[i] = False
                 elif action == "ALL_IN":
                     # Calculate player bet
-                    playerBet = players[self.board.activePlayerIndex].chips
+                    playerBet = self.players[self.board.activePlayerIndex].chips
                     # Update the stored player bet thus far
                     self.board.playerBets[self.board.activePlayerIndex] += playerBet
                     # Update the current bet
                     if self.board.playerBets[self.board.activePlayerIndex] > self.board.currentBet:
                         self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
                     # Passing if they have 0 chips remaining (have already all-inned)
-                    self.board.playersPassing[self.board.activePlayerIndex] = False if players[self.board.activePlayerIndex].chips > 0 else True
+                    self.board.playersPassing[self.board.activePlayerIndex] = False if self.players[self.board.activePlayerIndex].chips > 0 else True
                     # Update the pot
-                    self.board.pot += players[self.board.activePlayerIndex].bet(playerBet)
+                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
                     # Disable checking if enabled
-                    if checkFlag:
-                        checkFlag = False
+                    if self.checkFlag:
+                        self.checkFlag = False
                         for i in range(self.board.playersPassing.__len__()):
                             self.board.playersPassing[i] = False
                 elif action == "CALL":
                     # Calculate player bet
                     playerBet = incomingBet
                     # Can the player call?
-                    if checkFlag and incomingBet == 0:
+                    if self.checkFlag and incomingBet == 0:
                         print("You cannot call when the phase bet is 0")
                         continue
                     # Do they have sufficient chips?
-                    elif playerBet > players[self.board.activePlayerIndex].chips:
+                    elif playerBet > self.players[self.board.activePlayerIndex].chips:
                         print("Not enough chips")
                         continue
                     # Update the stored player bet thus far
@@ -276,10 +206,10 @@ Your options are:
                     # Not passing
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                     # Update the pot
-                    self.board.pot += players[self.board.activePlayerIndex].bet(playerBet)
+                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
                 elif action == "CHECK":
                     # Can the player check?
-                    if (not checkFlag) or incomingBet != 0:
+                    if (not self.checkFlag) or incomingBet != 0:
                         print("You must call, raise, or fold")
                         continue
                     # Passing
@@ -296,7 +226,7 @@ Your options are:
                 # Increment turn!
                 self.board.activePlayerIndex += 1
                 # Handle overflow
-                self.board.activePlayerIndex = (self.board.activePlayerIndex) % players.__len__()
+                self.board.activePlayerIndex = (self.board.activePlayerIndex) % self.players.__len__()
                 
                 # Check Condition!
                 passing = True
@@ -330,15 +260,15 @@ Your options are:
             # worth removing the community knowledge from the players just yet.
             
             # Update each player's knowledge of the community cards
-            for i in range(players.__len__()):
-                players[i].communityUpdate(self.board.community)
+            for i in range(self.players.__len__()):
+                self.players[i].communityUpdate(self.board.community)
             
             # Change phase
             phase += 1
 
         # Check the score of each player's hand
         scores = []
-        for i in range(players.__len__()):
+        for i in range(self.players.__len__()):
             # Folding players get 0 points
             if self.board.playersFolding[i]:
                 scores.append(0)
@@ -346,12 +276,12 @@ Your options are:
             else:
                 # REFNOTE: This could change to being done by the Engine, taking
                 # each players 2 card hand and the community cards into account 
-                scores.append(players[i].handScore())
+                scores.append(self.players[i].handScore())
         
         # Find winners
         maxScore = -1
         winningIndex = []
-        for i in range(players.__len__()):
+        for i in range(self.players.__len__()):
             if scores[i] > maxScore:
                 maxScore = scores[i]
                 winningIndex = [i]
@@ -373,26 +303,26 @@ Your options are:
         print(f"River State: {communityString}")
         print()
         print(f"Player Scores/Hands:")
-        for i in range(players.__len__()):
-            print(f"Player {players[i].id} score: {scores[i]}")
-            print(f"\t hand: {players[i].hand()}")
+        for i in range(self.players.__len__()):
+            print(f"Player {self.players[i].id} score: {scores[i]}")
+            print(f"\t hand: {self.players[i].hand()}")
         
         # If there are multiple winners, tie-break by cards in hand
         if winningIndex.__len__() > 1:
             # Display information about multiple winners
             print(f"The winners are:")
             for i in winningIndex:
-                print(f"Player {players[i].id}")
+                print(f"Player {self.players[i].id}")
             
             # Identify tie-break scores
             tieScores = []
-            for i in range(players.__len__()):
+            for i in range(self.players.__len__()):
                 # If not a winner, no tiebreak score
                 if i not in winningIndex:
                     tieScores.append(0)
                 # If a winner, calculate tie-break score
                 else:
-                    temp = players[i].handCards
+                    temp = self.players[i].handCards
                     temp.sort(key=lambda x: x.value, reverse = True)
                     # tie-break score = high card value * 10 + low card value
                     tieScores.append(temp[0].value * 10 + temp[1].value)
@@ -400,7 +330,7 @@ Your options are:
             # Display information about tie-breaker hands
             print("Tie Breaker Hands:")
             for i in winningIndex:
-                print(f"Player {players[i].id} hand: {players[i].hand()}")
+                print(f"Player {self.players[i].id} hand: {self.players[i].hand()}")
 
             # Find winners
             tiebreaker = -1
@@ -420,7 +350,7 @@ Your options are:
             else:
                 print(f"The tiebreak winners are:")
                 for i in winningIndex:
-                    print(f"Player {players[i].id}")
+                    print(f"Player {self.players[i].id}")
         else: 
             # Display information about who won the pot
             print(f"The winner is: Player {winningIndex[0] + 1}")
@@ -430,25 +360,25 @@ Your options are:
 
         # Display how much each winner won
         if winningIndex.__len__() == 1:
-            players[winningIndex[0]].wins(self.board.pot)
-            print(f"Player {players[winningIndex[0]].id} wins {self.board.pot} chips!")
+            self.players[winningIndex[0]].wins(self.board.pot)
+            print(f"Player {self.players[winningIndex[0]].id} wins {self.board.pot} chips!")
         else:
             numWinners = winningIndex.__len__()
             for i in winningIndex:
-                players[winningIndex[i]].wins(self.board.pot/numWinners)
-                print(f"Player {players[winningIndex[i]].id} wins {self.board.pot/numWinners} chips!")
+                self.players[winningIndex[i]].wins(self.board.pot/numWinners)
+                print(f"Player {self.players[winningIndex[i]].id} wins {self.board.pot/numWinners} chips!")
         
         # Clean players hands
-        for i in range(players.__len__()):
-            players[i].handCards = []
+        for i in range(self.players.__len__()):
+            self.players[i].handCards = []
 
         # Eliminate players as necessary, and update Dealer Button
         temp = []
-        for i in range(players.__len__()):
+        for i in range(self.players.__len__()):
             # If a player has remaining chips greater than or equal to the minimum bet,
             # they continue to the next round, otherwise they are eliminated
-            if players[i].chips >= self.minBet:
-                temp.append(players[i])
+            if self.players[i].chips >= self.minBet:
+                temp.append(self.players[i])
             # If the dealer is to be eliminated, move the button one spot to the right.
             elif i == self.buttonPlayerIndex:
                 self.buttonPlayerIndex -= 1
@@ -468,3 +398,47 @@ Your options are:
         input("Next Round (hit enter to continue)")
 
         return
+    
+
+    def min_bet(self, incomingBet):
+        # Calculate player bet
+        playerBet = incomingBet + self.minBet
+        # Do they have sufficient chips?
+        if playerBet > self.players[self.board.activePlayerIndex].chips:
+            print("Not enough chips")
+            return 1
+        # Update the stored player bet thus far
+        self.board.playerBets[self.board.activePlayerIndex] += playerBet
+        # Update the current bet
+        self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
+        # Not passing
+        self.board.playersPassing[self.board.activePlayerIndex] = False
+        # Update the pot
+        self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
+        # Disable checking if enabled
+        if self.checkFlag:
+            self.checkFlag = False
+            for i in range(self.board.playersPassing.__len__()):
+                self.board.playersPassing[i] = False
+        return 0
+    def low_bet(self, incomingBet):
+        # Calculate player bet
+        playerBet = incomingBet + self.players[self.board.activePlayerIndex].chips * 0.1 if self.players[self.board.activePlayerIndex].chips * 0.1 > self.minBet else self.minBet
+        # Do they have sufficient chips?
+        if playerBet > self.players[self.board.activePlayerIndex].chips:
+            print("Not enough chips")
+            return 1
+        # Update the stored player bet thus far
+        self.board.playerBets[self.board.activePlayerIndex] += playerBet
+        # Update the current bet
+        self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
+        # Not passing
+        self.board.playersPassing[self.board.activePlayerIndex] = False
+        # Update the pot
+        self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
+        # Disable checking if enabled
+        if self.checkFlag:
+            self.checkFlag = False
+            for i in range(self.board.playersPassing.__len__()):
+                self.board.playersPassing[i] = False
+        return 0

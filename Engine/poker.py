@@ -33,6 +33,7 @@ class Poker:
         pot = 0
         community = []
         phase = 0
+        checkFlag = True
 
 
         # Small and Big blinds mandatory pay in
@@ -83,6 +84,11 @@ class Poker:
         # Start in phase 1
         phase = 1
         while phase < 5:
+            # Checking is enabled at the start of each phase
+            # Exception, you cannot check unless the incoming bet is 0,
+            # meaning that only the big-blind can check in the pre-flop
+            checkFlag = True
+
             for i in range(players.__len__()):
                 if not playersFolding[i]:
                     playersPassing[i] = False
@@ -121,6 +127,7 @@ class Poker:
                     communityString += "]"
                 
                 # Display relevant information to the user
+                print(f"The pot is: {pot}.")
                 print(f"The community cards are: {communityString}.")
                 print(f"Your hand is: {players[activePlayerIndex].hand()}.")
                 print(f"You have {players[activePlayerIndex].chips} chips left.")
@@ -141,8 +148,8 @@ Your options are:
     MID_BET ({incomingBet} + {players[activePlayerIndex].chips * 0.4 if players[activePlayerIndex].chips * 0.4 > self.minBet else self.minBet} = {incomingBet + players[activePlayerIndex].chips * 0.4 if players[activePlayerIndex].chips * 0.1 > self.minBet else self.minBet}) (raise)
     HGH_BET ({incomingBet} + {players[activePlayerIndex].chips * 0.7 if players[activePlayerIndex].chips * 0.7 > self.minBet else self.minBet} = {incomingBet + players[activePlayerIndex].chips * 0.7 if players[activePlayerIndex].chips * 0.1 > self.minBet else self.minBet}) (raise)
     ALL_IN  ({players[activePlayerIndex].chips})
-    CALL ({incomingBet})
-    CHECK (only if incoming bet is 0)
+    CALL ({incomingBet}) (cannot perform when the incoming bet is 0)
+    CHECK (only if incoming bet is 0 and no players have bet or raised before you)
     FOLD (drop out)
                     ''')
                 # Request player action
@@ -174,6 +181,11 @@ Your options are:
                     playersPassing[activePlayerIndex] = False
                     # Update the pot
                     pot += players[activePlayerIndex].bet(playerBet)
+                    # Disable checking if enabled
+                    if checkFlag:
+                        checkFlag = False
+                        for i in range(playersPassing.__len__()):
+                            playersPassing[i] = False
                 elif action == "LOW_BET":
                     # Calculate player bet
                     playerBet = incomingBet + players[activePlayerIndex].chips * 0.1 if players[activePlayerIndex].chips * 0.1 > self.minBet else self.minBet
@@ -189,6 +201,11 @@ Your options are:
                     playersPassing[activePlayerIndex] = False
                     # Update the pot
                     pot += players[activePlayerIndex].bet(playerBet)
+                    # Disable checking if enabled
+                    if checkFlag:
+                        checkFlag = False
+                        for i in range(playersPassing.__len__()):
+                            playersPassing[i] = False
                 elif action == "MID_BET":
                     # Calculate player bet
                     playerBet = incomingBet + players[activePlayerIndex].chips * 0.4 if players[activePlayerIndex].chips * 0.4 > self.minBet else self.minBet
@@ -204,6 +221,11 @@ Your options are:
                     playersPassing[activePlayerIndex] = False
                     # Update the pot
                     pot += players[activePlayerIndex].bet(playerBet)
+                    # Disable checking if enabled
+                    if checkFlag:
+                        checkFlag = False
+                        for i in range(playersPassing.__len__()):
+                            playersPassing[i] = False
                 elif action == "HGH_BET":
                     # Calculate player bet
                     playerBet = incomingBet + players[activePlayerIndex].chips * 0.7 if players[activePlayerIndex].chips * 0.7 > self.minBet else self.minBet
@@ -219,6 +241,11 @@ Your options are:
                     playersPassing[activePlayerIndex] = False
                     # Update the pot
                     pot += players[activePlayerIndex].bet(playerBet)
+                    # Disable checking if enabled
+                    if checkFlag:
+                        checkFlag = False
+                        for i in range(playersPassing.__len__()):
+                            playersPassing[i] = False
                 elif action == "ALL_IN":
                     # Calculate player bet
                     playerBet = players[activePlayerIndex].chips
@@ -231,22 +258,31 @@ Your options are:
                     playersPassing[activePlayerIndex] = False if players[activePlayerIndex].chips > 0 else True
                     # Update the pot
                     pot += players[activePlayerIndex].bet(playerBet)
+                    # Disable checking if enabled
+                    if checkFlag:
+                        checkFlag = False
+                        for i in range(playersPassing.__len__()):
+                            playersPassing[i] = False
                 elif action == "CALL":
                     # Calculate player bet
                     playerBet = incomingBet
+                    # Can the player call?
+                    if checkFlag and incomingBet == 0:
+                        print("You cannot call when the phase bet is 0")
+                        continue
                     # Do they have sufficient chips?
-                    if playerBet > players[activePlayerIndex].chips:
+                    elif playerBet > players[activePlayerIndex].chips:
                         print("Not enough chips")
                         continue
                     # Update the stored player bet thus far
                     playerBets[activePlayerIndex] += playerBet
                     # Not passing
-                    playersPassing[activePlayerIndex] = False
+                    playersPassing[activePlayerIndex] = True
                     # Update the pot
                     pot += players[activePlayerIndex].bet(playerBet)
                 elif action == "CHECK":
                     # Can the player check?
-                    if incomingBet != 0:
+                    if (not checkFlag) or incomingBet != 0:
                         print("You must call, raise, or fold")
                         continue
                     # Passing

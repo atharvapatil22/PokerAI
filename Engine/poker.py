@@ -12,17 +12,27 @@ from deck import Deck
 
 class Poker:
 
-    def __init__(self, numPlayers, startChips, minBet) -> None:
+    def __init__(self, numPlayers, startChips, minBet, shuffleFlag=True, deckSquences=None) -> None:
         self.players = []
         for i in range(numPlayers):
             self.players.append(PokerPlayer(startChips, i+1))
         self.minBet = minBet
         self.buttonPlayerIndex = 0
+        self.squenceDecks = []
+        if not shuffleFlag:
+            squenceSrc = open(deckSquences, "r")
+            squences = squenceSrc.readLines()
+            for sq in squences:
+                self.squenceDecks.append(Deck(shuffleFlag, sq))
+            squenceSrc.close()
+        else:
+            self.squenceDecks = Deck(shuffleFlag, None)
+        
 
     
     def runRound(self):
         # Define some variables
-        deck = Deck()
+        deck = self.squenceDecks #retrieve deck from pre-generated sequence, this could be a list or a single deck based on the shuffle flag
         players = self.players
         playersPassing = []
         playersFolding = []

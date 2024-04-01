@@ -29,7 +29,7 @@ class Round:
         self.board = self.Board(players,self.minBet)
         self.checkFlag = True
 
-    # Function will place Min/Low/Mid/High bet if the player has enough chips & will return true. If player does not have enough chips, it will return false
+    # Function will place Min/Low/Mid/High bet if the player has enough chips & will return true. However, if player does not have enough chips, it will return false
     def handleBetIfValid(self,action,activePlayerIndex,incomingBet):
         # Calculate player bet
         if action == Action.MIN_BET:
@@ -65,7 +65,7 @@ class Round:
                 self.board.playersPassing[i] = False
         return True
 
-    def handleAllIn(self,activePlayerIndex,incomingBet):
+    def allIn(self,activePlayerIndex):
         # Calculate player bet
         playerBet = self.players[activePlayerIndex].chips
 
@@ -87,6 +87,26 @@ class Round:
             self.checkFlag = False
             for i in range(self.board.playersPassing.__len__()):
                 self.board.playersPassing[i] = False
+
+    # If player can call, function will perform the necessary changes and return true. If call is not a valid action, function will return false
+    def callIfValid(self,activePlayerIndex,incomingBet):
+        # Calculate player bet
+        playerBet = incomingBet
+        # Can the player call?
+        if self.checkFlag and incomingBet == 0:
+            print("You cannot call when the phase bet is 0")
+            return False
+        # Do they have sufficient chips?
+        elif playerBet > self.players[activePlayerIndex].chips:
+            print("Not enough chips")
+            return False
+        # Update the stored player bet thus far
+        self.board.playerBets[activePlayerIndex] += playerBet
+        # Not passing
+        self.board.playersPassing[activePlayerIndex] = True
+        # Update the pot
+        self.board.pot += self.players[activePlayerIndex].bet(playerBet)
+        return True
 
     def runRound(self):
         # Define some variables
@@ -176,10 +196,6 @@ class Round:
                 action = self.players[self.board.activePlayerIndex].get_action(self.board)
                
                 
-                # REFNOTE: The handling of player actions definitely should be handled by methods.
-                # A lot of the functionality is the same between them, or at least pretty similar,
-                # so you can factor that out, or not it doesn't matter too much. The important thing
-                # is that methods are handling each of the potential actions.
                 # Also, currently actions are only accepted on the command line, perhaps a method in the
                 # Player class could be used to determine what type of input should be used (command line
                 # for real players, the appropriate decision making method for agent players, etc.) once
@@ -191,39 +207,10 @@ class Round:
                     if not self.handleBetIfValid(action,self.board.activePlayerIndex,incomingBet):
                         continue
                 elif action == "ALL_IN":
-                    # Calculate player bet
-                    playerBet = self.players[self.board.activePlayerIndex].chips
-                    # Update the stored player bet thus far
-                    self.board.playerBets[self.board.activePlayerIndex] += playerBet
-                    # Update the current bet
-                    if self.board.playerBets[self.board.activePlayerIndex] > self.board.currentBet:
-                        self.board.currentBet = self.board.playerBets[self.board.activePlayerIndex]
-                    # Passing if they have 0 chips remaining (have already all-inned)
-                    self.board.playersPassing[self.board.activePlayerIndex] = False if self.players[self.board.activePlayerIndex].chips > 0 else True
-                    # Update the pot
-                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
-                    # Disable checking if enabled
-                    if self.checkFlag:
-                        self.checkFlag = False
-                        for i in range(self.board.playersPassing.__len__()):
-                            self.board.playersPassing[i] = False
+                    self.allIn(self.board.activePlayerIndex)
                 elif action == "CALL":
-                    # Calculate player bet
-                    playerBet = incomingBet
-                    # Can the player call?
-                    if self.checkFlag and incomingBet == 0:
-                        print("You cannot call when the phase bet is 0")
+                    if not self.callIfValid(self.board.activePlayerIndex,incomingBet):
                         continue
-                    # Do they have sufficient chips?
-                    elif playerBet > self.players[self.board.activePlayerIndex].chips:
-                        print("Not enough chips")
-                        continue
-                    # Update the stored player bet thus far
-                    self.board.playerBets[self.board.activePlayerIndex] += playerBet
-                    # Not passing
-                    self.board.playersPassing[self.board.activePlayerIndex] = True
-                    # Update the pot
-                    self.board.pot += self.players[self.board.activePlayerIndex].bet(playerBet)
                 elif action == "CHECK":
                     # Can the player check?
                     if (not self.checkFlag) or incomingBet != 0:

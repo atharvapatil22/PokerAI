@@ -42,27 +42,29 @@ class RealPlayer(Player):
         while action == None:
             action = input("What would you like to do? ").upper()
             action = action.upper()
-            action = self.validate_input(action, board)
+            action = self.validate_input(action, validActions)
         return action
     
-    def parse_input(self, action):
+    def validate_input(self, action, validActions):
+        action_enum = None
         if action == "MIN_BET":
-            return Action.MIN_BET
+            action_enum = Action.MIN_BET
         elif action == "LOW_BET":
-            return Action.LOW_BET
+            action_enum = Action.LOW_BET
         elif action == "MID_BET":
-            return Action.MID_BET
-        elif action == "HIGH_BET":
-            return Action.HIGH_BET
+            action_enum = Action.MID_BET
+        elif action == "HGH_BET":
+            action_enum = Action.HIGH_BET
         elif action == "ALL_IN":
-            return Action.ALL_IN
+            action_enum = Action.ALL_IN
         elif action == "CALL":
-            return Action.CALL
+            action_enum = Action.CALL
         elif action == "CHECK":
-            return Action.CHECK
+            action_enum = Action.CHECK
         elif action == "FOLD":
-            return Action.FOLD
-        else:
-            print("Invalid input. Try again.")
+            action_enum = Action.FOLD
+        if action_enum not in validActions or action_enum == None:
+            print("Invalid action. Try again.")
             return None
+        return action_enum
     

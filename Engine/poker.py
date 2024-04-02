@@ -22,8 +22,11 @@ class Poker:
         if not shuffleFlag:
             squenceSrc = open(deckSquences, "r")
             squences = squenceSrc.readLines()
-            for sq in squences:
-                self.squenceDecks.append(Deck(shuffleFlag, sq))
+            for games in squences: #over all possible games
+                gamesqs = games.split(" ")[3:] #remove game number formatting
+                for sqs in gamesqs: #for each deck available in the game
+                    cards = shuffleFlag[1,-2].split(",") #remove the deck brackets with trailing ',' then split the cards by ',' 
+                    self.squenceDecks.append(Deck(cards, sqs)) #provide list of decks without brackets or ','
             squenceSrc.close()
         else:
             self.squenceDecks = Deck(shuffleFlag, None)

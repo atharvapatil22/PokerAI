@@ -14,10 +14,12 @@ class Deck:
         else:
             # Parse deckSequence
             # Each card will be in the form: "[<#|T|J|Q|K|A> <Sp|Cl|Di|He>]"
-            for cardString in deckSequence:
-                # Remove the brackets
-                cardString = cardString[1:-1]
-                valString, suitShort = cardString.split(" ")
+            for cardStringIdx in range(len(deckSequence)): #each card in the deck provided where deck is list of cards
+                # Remove the ',' at the end
+                cardString = deckSequence[cardStringIdx]
+                if cardStringIdx < len(deckSequence) - 1: #if not last card, remove the trialing ','
+                    cardString = cardString[:-1]
+                valString, suitShort = cardString.split(" ") #separate value and suite
                 val = 0
                 suit = ""
                 # Parse val

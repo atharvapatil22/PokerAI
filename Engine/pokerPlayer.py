@@ -158,7 +158,7 @@ class PokerPlayer:
         # Temporary streak set storage
         streakSet = [vals[0]]
         # Max streak set recorded (used for finding the straight high card)
-        streakSetMax = []
+        streakSetMax = [vals[0]]
         for i in range(12):
             # Look at two cards at a time
             # j is the first (lower)
@@ -227,7 +227,7 @@ class PokerPlayer:
             # Max streak recorded
             flushStreakSet = [flushCards[0]]
             # Temporary streak set storage
-            flushStreakSetMax = []
+            flushStreakSetMax = [flushCards[0].value]
             # Max streak set recorded (used for finding the straight high card)
             for i in range(flushCards.__len__() * 2):
                 # Look at two cards at a time

@@ -3,7 +3,7 @@ from player import Action
 
 class RealPlayer(Player):
 
-    def get_action(self, board):
+    def get_action(self, board, validActions):
         print(f"The pot is: {board.pot}.")
         print(f"The community cards are: {board.community}.")
         print(f"Your hand is: {self.cardsInHand}.")
@@ -18,43 +18,53 @@ class RealPlayer(Player):
         # ALL_IN  = 100%
         # CALL = CHECK = Up to current bet
         # FOLD = drop out
+        MIN_BET_STR = "" if Action.MIN_BET not in validActions else f"MIN_BET ({incomingBet} + {board.minBet} = {incomingBet + board.minBet}) (raise)\n"
+        LOW_BET_STR = "" if Action.LOW_BET not in validActions else f"LOW_BET ({incomingBet} + {self.chips * 0.1 if self.chips * 0.1 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.1 if self.chips * 0.1 > self.minBet else self.minBet}) (raise)\n"
+        MID_BET_STR = "" if Action.MID_BET not in validActions else f"MID_BET ({incomingBet} + {self.chips * 0.4 if self.chips * 0.4 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.4 if self.chips * 0.4 > self.minBet else self.minBet}) (raise)\n"
+        HGH_BET_STR = "" if Action.HIGH_BET not in validActions else f"HGH_BET ({incomingBet} + {self.chips * 0.7 if self.chips * 0.7 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.7 if self.chips * 0.7 > self.minBet else self.minBet}) (raise)\n"
+        ALL_IN_STR = "" if Action.ALL_IN not in validActions else f"ALL_IN  ({self.chips})\n"
+        CALL_STR = "" if Action.CALL not in validActions else f"CALL ({incomingBet}) (cannot perform when the incoming bet is 0)\n"
+        CHECK_STR = "" if Action.CHECK not in validActions else f"CHECK (only if incoming bet is 0 and no players have bet or raised before you)\n"
+        FOLD_STR = "" if Action.FOLD not in validActions else f"FOLD (drop out)\n"
         print(f'''
             Your options are:
-            MIN_BET ({incomingBet} + {board.minBet} = {incomingBet + board.minBet}) (raise)
-            LOW_BET ({incomingBet} + {self.chips * 0.1 if self.chips * 0.1 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.1 if self.chips * 0.1 > self.minBet else self.minBet}) (raise)
-            MID_BET ({incomingBet} + {self.chips * 0.4 if self.chips * 0.4 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.4 if self.chips * 0.4 > self.minBet else self.minBet}) (raise)
-            HGH_BET ({incomingBet} + {self.chips * 0.7 if self.chips * 0.7 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.7 if self.chips * 0.7 > self.minBet else self.minBet}) (raise)
-            ALL_IN  ({self.chips})
-            CALL ({incomingBet}) (cannot perform when the incoming bet is 0)
-            CHECK (only if incoming bet is 0 and no players have bet or raised before you)
-            FOLD (drop out)
+            {MIN_BET_STR}
+            {LOW_BET_STR}
+            {MID_BET_STR}
+            {HGH_BET_STR}
+            {ALL_IN_STR}
+            {CALL_STR}
+            {CHECK_STR}
+            {FOLD_STR}
             ''')
         # Request player action
         action = None
         while action == None:
             action = input("What would you like to do? ").upper()
             action = action.upper()
-            action = self.validate_input(action, board)
+            action = self.validate_input(action, validActions)
         return action
     
-    def parse_input(self, action):
+    def validate_input(self, action, validActions):
+        action_enum = None
         if action == "MIN_BET":
-            return Action.MIN_BET
+            action_enum = Action.MIN_BET
         elif action == "LOW_BET":
-            return Action.LOW_BET
+            action_enum = Action.LOW_BET
         elif action == "MID_BET":
-            return Action.MID_BET
-        elif action == "HIGH_BET":
-            return Action.HIGH_BET
+            action_enum = Action.MID_BET
+        elif action == "HGH_BET":
+            action_enum = Action.HIGH_BET
         elif action == "ALL_IN":
-            return Action.ALL_IN
+            action_enum = Action.ALL_IN
         elif action == "CALL":
-            return Action.CALL
+            action_enum = Action.CALL
         elif action == "CHECK":
-            return Action.CHECK
+            action_enum = Action.CHECK
         elif action == "FOLD":
-            return Action.FOLD
-        else:
-            print("Invalid input. Try again.")
+            action_enum = Action.FOLD
+        if action_enum not in validActions or action_enum == None:
+            print("Invalid action. Try again.")
             return None
+        return action_enum
     

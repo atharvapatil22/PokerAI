@@ -21,7 +21,7 @@ class Player(ABC):
 
     # Will be implemented accordingly depending on the type of agent or a real player
     @abstractmethod 
-    def get_action(self, board):
+    def get_action(self, board, validActions):
         pass
    
     # Will be called by round in order to give the player cards

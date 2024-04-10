@@ -5,7 +5,7 @@ class Action(Enum):
     MIN_BET = "min_bet"
     LOW_BET = "low_bet"
     MID_BET = "mid_bet"
-    HIGH_BET = "high_bet"
+    HGH_BET = "hgh_bet"
     ALL_IN = "all_in"
     CALL = "call"
     CHECK = "check"

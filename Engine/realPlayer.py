@@ -5,7 +5,7 @@ class RealPlayer(Player):
 
     def get_action(self, board):
         print(f"The pot is: {board.pot}.")
-        print(f"The community cards are: {board.communityString}.")
+        print(f"The community cards are: {board.community}.")
         print(f"Your hand is: {self.cardsInHand}.")
         print(f"You have {self.chips} chips left.")
         print(f"You have bet {self.current_bet}.")

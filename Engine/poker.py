@@ -1,5 +1,6 @@
 from pokerPlayer import PokerPlayer
 from deck import Deck
+from round import Round
 
 # general idea, poker will have rounds that take players array as parameters and return players array 
 # play will continue until self.players array has size 1
@@ -31,8 +32,6 @@ class Poker:
         else:
             self.squenceDecks = Deck(shuffleFlag, None)
         
-
-    
     def runRound(self):
         # Define some variables
         deck = self.squenceDecks #retrieve deck from pre-generated sequence, this could be a list or a single deck based on the shuffle flag
@@ -489,8 +488,11 @@ Your options are:
     def runGame(self):
         # Rounds continue until only one player is left
         # That player is the winner
+       
         while self.players.__len__() > 1:
-            self.runRound()
+            deck = Deck()
+            round = Round(self.players, deck, self.minBet, self.buttonPlayerIndex)
+            self.players = round.runRound()
         
         print(f"THE WINNER IS: PLAYER {self.players[0].id}")
 

@@ -5,7 +5,7 @@ class Action(Enum):
     MIN_BET = "min_bet"
     LOW_BET = "low_bet"
     MID_BET = "mid_bet"
-    HIGH_BET = "high_bet"
+    HGH_BET = "hgh_bet"
     ALL_IN = "all_in"
     CALL = "call"
     CHECK = "check"
@@ -21,7 +21,7 @@ class Player(ABC):
 
     # Will be implemented accordingly depending on the type of agent or a real player
     @abstractmethod 
-    def get_action(self, board):
+    def get_action(self, board, validActions):
         pass
    
     # Will be called by round in order to give the player cards

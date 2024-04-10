@@ -32,8 +32,8 @@ class Round:
     # Function will determine all the valid actions for the active player
     def getValidPlayerActions(self,activePlayerIndex,incomingBet):
         # Copy all the player actions
-        validActions = Action[:]
-
+        validActions = [member for _, member in Action.__members__.items()]
+        print(validActions)
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
@@ -43,7 +43,7 @@ class Round:
         if (not self.checkFlag) or incomingBet != 0:
             # CANNOT CHECK -> You must call, raise, or fold
             validActions.remove(Action.CHECK)
-        if incomingBet + self.minBet > self.players[activePlayerIndex].chips:
+        if incomingBet + self.minBet > self.players[int(activePlayerIndex)].chips:
             # Not enough chips
             validActions.remove(Action.MIN_BET)
             validActions.remove(Action.LOW_BET)
@@ -433,7 +433,7 @@ class Round:
 
         # Deal cards
         for i in range(self.players.__len__() * 2):
-            self.players[(i+1+self.buttonPlayerIndex) % self.players.__len__()].dealt(self.deck.top())
+            self.players[(i+1+self.buttonPlayerIndex) % self.players.__len__()].deal(self.deck.top())
         
         
 

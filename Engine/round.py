@@ -37,7 +37,7 @@ class Round:
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
-        elif incomingBet > self.players[activePlayerIndex].chips:
+        elif incomingBet > self.players[int(activePlayerIndex)].chips:
             # CANNOT CALL -> Not enough chips
             validActions.remove(Action.CALL)
         if (not self.checkFlag) or incomingBet != 0:

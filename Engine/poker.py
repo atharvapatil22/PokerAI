@@ -18,7 +18,7 @@ class Poker:
     def __init__(self, numPlayers, startChips, minBet, shuffleFlag=True, deckSquences=None) -> None:
         self.players = []
         for i in range(numPlayers):
-            self.players.append(RealPlayer(startChips, i+1))
+            self.players.append(RealPlayer(i+1, startChips))
         self.minBet = minBet
         self.buttonPlayerIndex = 0
         self.squenceDecks = []

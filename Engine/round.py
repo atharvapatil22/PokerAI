@@ -458,6 +458,9 @@ class Round:
             # Checking is enabled at the start of each phase
             # Exception, you cannot check unless the incoming bet is 0,
             # meaning that only the big-blind can check in the pre-flop
+
+            # allow for checking at the beginning of each phase
+            self.checkFlag = True
     
 
             for i in range(self.players.__len__()):

@@ -493,8 +493,8 @@ class Poker:
        
         while self.players.__len__() > 1:
             deck = Deck()
-            round = Round(self.players, deck, self.minBet)
-            self.players = round.runRound()
+            round = Round(self.players, deck, self.minBet, self.buttonPlayerIndex)
+            self.players, self.buttonPlayerIndex = round.runRound()
         
         print(f"THE WINNER IS: PLAYER {self.players[0].id}")
 

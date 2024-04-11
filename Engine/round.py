@@ -224,7 +224,6 @@ class Round:
             FULL_HOUSE_LOW = TWO_KIND_VAL
 
         
-        # WARNING: THE STRAIGHT LOGIC HERE IS WRONG, ACE CANNOT BRIDGE KING AND TWO IN A STRAIGHT
         
         # Check for Straight
         # Initialize variables
@@ -239,7 +238,7 @@ class Round:
         # Temporary streak set storage
         streakSet = [vals[0]]
         # Max streak set recorded (used for finding the straight high card)
-        streakSetMax = []
+        streakSetMax = [vals[0]]
         for i in range(12):
             # Look at two cards at a time
             # j is the first (lower)
@@ -285,7 +284,6 @@ class Round:
         # Sort cards for straight flush checking
         cards.sort(key=lambda x: x.value)
 
-        # WARNING: THE STRAIGHT LOGIC HERE IS WRONG, ACE CANNOT BRIDGE KING AND TWO IN A STRAIGHT
 
         # Check for straight flush
         # Initialize variables
@@ -308,7 +306,7 @@ class Round:
             # Max streak recorded
             flushStreakSet = [flushCards[0]]
             # Temporary streak set storage
-            flushStreakSetMax = []
+            flushStreakSetMax = [flushCards[0]]
             # Max streak set recorded (used for finding the straight high card)
             for i in range(flushCards.__len__() * 2):
                 # Look at two cards at a time
@@ -700,6 +698,6 @@ class Round:
         print()
         input("Next Round (hit enter to continue)")
 
-        return
+        return self.players
     
     

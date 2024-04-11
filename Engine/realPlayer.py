@@ -18,14 +18,14 @@ class RealPlayer(Player):
         # ALL_IN  = 100%
         # CALL = CHECK = Up to current bet
         # FOLD = drop out
-        MIN_BET_STR = "" if Action.MIN_BET not in validActions else f"MIN_BET ({incomingBet} + {board.minBet} = {incomingBet + board.minBet}) (raise)\n"
-        LOW_BET_STR = "" if Action.LOW_BET not in validActions else f"LOW_BET ({incomingBet} + {self.chips * 0.1 if self.chips * 0.1 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.1 if self.chips * 0.1 > board.minBet else board.minBet}) (raise)\n"
-        MID_BET_STR = "" if Action.MID_BET not in validActions else f"MID_BET ({incomingBet} + {self.chips * 0.4 if self.chips * 0.4 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.4 if self.chips * 0.4 > board.minBet else board.minBet}) (raise)\n"
-        HIGH_BET_STR = "" if Action.HIGH_BET not in validActions else f"HIGH_BET ({incomingBet} + {self.chips * 0.7 if self.chips * 0.7 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.7 if self.chips * 0.7 > board.minBet else board.minBet}) (raise)\n"
-        ALL_IN_STR = "" if Action.ALL_IN not in validActions else f"ALL_IN  ({self.chips})\n"
-        CALL_STR = "" if Action.CALL not in validActions else f"CALL ({incomingBet}) (cannot perform when the incoming bet is 0)\n"
-        CHECK_STR = "" if Action.CHECK not in validActions else f"CHECK (only if incoming bet is 0 and no players have bet or raised before you)\n"
-        FOLD_STR = "" if Action.FOLD not in validActions else f"FOLD (drop out)\n"
+        MIN_BET_STR = "" if Action.MIN_BET not in validActions else f"MIN_BET ({incomingBet} + {board.minBet} = {incomingBet + board.minBet}) (raise)"
+        LOW_BET_STR = "" if Action.LOW_BET not in validActions else f"LOW_BET ({incomingBet} + {self.chips * 0.1 if self.chips * 0.1 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.1 if self.chips * 0.1 > board.minBet else board.minBet}) (raise)"
+        MID_BET_STR = "" if Action.MID_BET not in validActions else f"MID_BET ({incomingBet} + {self.chips * 0.4 if self.chips * 0.4 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.4 if self.chips * 0.4 > board.minBet else board.minBet}) (raise)"
+        HIGH_BET_STR = "" if Action.HIGH_BET not in validActions else f"HIGH_BET ({incomingBet} + {self.chips * 0.7 if self.chips * 0.7 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.7 if self.chips * 0.7 > board.minBet else board.minBet}) (raise)"
+        ALL_IN_STR = "" if Action.ALL_IN not in validActions else f"ALL_IN  ({self.chips})"
+        CALL_STR = "" if Action.CALL not in validActions else f"CALL ({incomingBet}) (cannot perform when the incoming bet is 0)"
+        CHECK_STR = "" if Action.CHECK not in validActions else f"CHECK (only if incoming bet is 0 and no players have bet or raised before you)"
+        FOLD_STR = "" if Action.FOLD not in validActions else f"FOLD (drop out)"
         print(f'''
             Your options are:
             {MIN_BET_STR}

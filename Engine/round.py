@@ -669,9 +669,10 @@ class Round:
                 self.players[winningIndex[i]].win_round(self.board.pot/numWinners)
                 print(f"Player {self.players[winningIndex[i]].id} wins {self.board.pot/numWinners} chips!")
         
-        # Clean players hands
+        # Clean players hands and bets
         for i in range(self.players.__len__()):
             self.players[i].cardsInHand = []
+            self.players[i].current_bet = 0
 
         # Eliminate players as necessary, and update Dealer Button
         temp = []

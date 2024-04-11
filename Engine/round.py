@@ -471,8 +471,15 @@ class Round:
                 else:
                     self.board.activePlayerIndex = self.buttonPlayerIndex
 
+            # If only one player is NOT folding, players are passing manditorily
+            notFoldCount = 0
+            for i in range(self.players.__len__()):
+                if not self.board.playersFolding[i]:
+                    notFoldCount +=1
+
             # Phases change once every player is folded or passing
-            passing = False
+            passing = False if not notFoldCount==1 else True
+
             # i = activePlayerIndex
             while (not passing):
                 # Table turn cycle:
@@ -534,6 +541,13 @@ class Round:
                 for j in range(self.board.playersPassing.__len__()):
                     if self.board.playersPassing[j] == False:
                         passing = False
+                # If only one player is NOT folding, players are passing manditorily
+                notFoldCount = 0
+                for i in range(self.players.__len__()):
+                    if not self.board.playersFolding[i]:
+                        notFoldCount +=1
+                if notFoldCount == 1:
+                    passing = True
             
             # Handle phase change
             # Phase 1-->2 Preflop --> Flop

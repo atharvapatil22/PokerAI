@@ -12,6 +12,7 @@ class Round:
             self.playerBets = []
             self.currentBet = 0
             self.activePlayerIndex = 0
+            self.minBet = minBet
             
             # Setup state arraylists
             for i in range(players.__len__()):
@@ -30,10 +31,10 @@ class Round:
         self.checkFlag = True
 
     # Function will determine all the valid actions for the active player
-    def getValidPlayerActions(self,activePlayerIndex,incomingBet):
+    def getValidPlayerActions(self,incomingBet, activePlayerIndex):
         # Copy all the player actions
         validActions = [member for _, member in Action.__members__.items()]
-        print(validActions)
+        print("player index",activePlayerIndex)
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
@@ -557,9 +558,10 @@ class Round:
             # and such, the agent would need to know the community cards, so it might not be
             # worth removing the community knowledge from the players just yet.
             
-            # Update each player's knowledge of the community cards
-            for i in range(self.players.__len__()):
-                self.players[i].communityUpdate(self.board.community)
+            # No longer needed as of now
+            # # Update each player's knowledge of the community cards
+            # for i in range(self.players.__len__()):
+            #     self.players[i].communityUpdate(self.board.community)
             
             # Change phase
             phase += 1

@@ -661,12 +661,12 @@ class Round:
 
         # Display how much each winner won
         if winningIndex.__len__() == 1:
-            self.players[winningIndex[0]].wins(self.board.pot)
+            self.players[winningIndex[0]].win_round(self.board.pot)
             print(f"Player {self.players[winningIndex[0]].id} wins {self.board.pot} chips!")
         else:
             numWinners = winningIndex.__len__()
             for i in winningIndex:
-                self.players[winningIndex[i]].wins(self.board.pot/numWinners)
+                self.players[winningIndex[i]].win_round(self.board.pot/numWinners)
                 print(f"Player {self.players[winningIndex[i]].id} wins {self.board.pot/numWinners} chips!")
         
         # Clean players hands

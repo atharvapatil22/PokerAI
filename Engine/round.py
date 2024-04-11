@@ -22,11 +22,11 @@ class Round:
             self.currentBet = minBet
 
 
-    def __init__(self, players, deck, minibet):
+    def __init__(self, players, deck, minibet, buttonPlayerIndex = 0):
         self.players = players
         self.deck = deck
         self.minBet = minibet
-        self.buttonPlayerIndex = 0
+        self.buttonPlayerIndex = buttonPlayerIndex
         self.board = self.Board(players,self.minBet)
         self.checkFlag = True
 
@@ -713,6 +713,6 @@ class Round:
         print()
         input("Next Round (hit enter to continue)")
 
-        return self.players
+        return self.players, self.buttonPlayerIndex
     
     

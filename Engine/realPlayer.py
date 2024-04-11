@@ -5,8 +5,8 @@ class RealPlayer(Player):
 
     def get_action(self, board, validActions):
         print(f"The pot is: {board.pot}.")
-        print(f"The community cards are: {board.community}.")
-        print(f"Your hand is: {self.cardsInHand}.")
+        print("The community cards are: " + ", ".join(str(card) for card in board.community))
+        print("Your hand is: " + ", ".join(str(card) for card in self.cardsInHand))
         print(f"You have {self.chips} chips left.")
         print(f"You have bet {self.current_bet}.")
         print(f"The current bet is {board.currentBet}.")
@@ -14,24 +14,24 @@ class RealPlayer(Player):
         print(f"The incoming bet is {incomingBet}.")
         # LOW_BET = 10%
         # MID_BET = 40%
-        # HGH_BET = 70%
+        # HIGH_BET = 70%
         # ALL_IN  = 100%
         # CALL = CHECK = Up to current bet
         # FOLD = drop out
-        MIN_BET_STR = "" if Action.MIN_BET not in validActions else f"MIN_BET ({incomingBet} + {board.minBet} = {incomingBet + board.minBet}) (raise)\n"
-        LOW_BET_STR = "" if Action.LOW_BET not in validActions else f"LOW_BET ({incomingBet} + {self.chips * 0.1 if self.chips * 0.1 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.1 if self.chips * 0.1 > self.minBet else self.minBet}) (raise)\n"
-        MID_BET_STR = "" if Action.MID_BET not in validActions else f"MID_BET ({incomingBet} + {self.chips * 0.4 if self.chips * 0.4 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.4 if self.chips * 0.4 > self.minBet else self.minBet}) (raise)\n"
-        HGH_BET_STR = "" if Action.HIGH_BET not in validActions else f"HGH_BET ({incomingBet} + {self.chips * 0.7 if self.chips * 0.7 > self.minBet else self.minBet} = {incomingBet + self.chips * 0.7 if self.chips * 0.7 > self.minBet else self.minBet}) (raise)\n"
-        ALL_IN_STR = "" if Action.ALL_IN not in validActions else f"ALL_IN  ({self.chips})\n"
-        CALL_STR = "" if Action.CALL not in validActions else f"CALL ({incomingBet}) (cannot perform when the incoming bet is 0)\n"
-        CHECK_STR = "" if Action.CHECK not in validActions else f"CHECK (only if incoming bet is 0 and no players have bet or raised before you)\n"
-        FOLD_STR = "" if Action.FOLD not in validActions else f"FOLD (drop out)\n"
+        MIN_BET_STR = "" if Action.MIN_BET not in validActions else f"MIN_BET ({incomingBet} + {board.minBet} = {incomingBet + board.minBet}) (raise)"
+        LOW_BET_STR = "" if Action.LOW_BET not in validActions else f"LOW_BET ({incomingBet} + {self.chips * 0.1 if self.chips * 0.1 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.1 if self.chips * 0.1 > board.minBet else board.minBet}) (raise)"
+        MID_BET_STR = "" if Action.MID_BET not in validActions else f"MID_BET ({incomingBet} + {self.chips * 0.4 if self.chips * 0.4 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.4 if self.chips * 0.4 > board.minBet else board.minBet}) (raise)"
+        HIGH_BET_STR = "" if Action.HIGH_BET not in validActions else f"HIGH_BET ({incomingBet} + {self.chips * 0.7 if self.chips * 0.7 > board.minBet else board.minBet} = {incomingBet + self.chips * 0.7 if self.chips * 0.7 > board.minBet else board.minBet}) (raise)"
+        ALL_IN_STR = "" if Action.ALL_IN not in validActions else f"ALL_IN  ({self.chips})"
+        CALL_STR = "" if Action.CALL not in validActions else f"CALL ({incomingBet}) (cannot perform when the incoming bet is 0)"
+        CHECK_STR = "" if Action.CHECK not in validActions else f"CHECK (only if incoming bet is 0 and no players have bet or raised before you)"
+        FOLD_STR = "" if Action.FOLD not in validActions else f"FOLD (drop out)"
         print(f'''
             Your options are:
             {MIN_BET_STR}
             {LOW_BET_STR}
             {MID_BET_STR}
-            {HGH_BET_STR}
+            {HIGH_BET_STR}
             {ALL_IN_STR}
             {CALL_STR}
             {CHECK_STR}
@@ -53,7 +53,7 @@ class RealPlayer(Player):
             action_enum = Action.LOW_BET
         elif action == "MID_BET":
             action_enum = Action.MID_BET
-        elif action == "HGH_BET":
+        elif action == "HIGH_BET":
             action_enum = Action.HIGH_BET
         elif action == "ALL_IN":
             action_enum = Action.ALL_IN

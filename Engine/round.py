@@ -12,6 +12,7 @@ class Round:
             self.playerBets = []
             self.currentBet = 0
             self.activePlayerIndex = 0
+            self.minBet = minBet
             
             # Setup state arraylists
             for i in range(players.__len__()):
@@ -30,20 +31,20 @@ class Round:
         self.checkFlag = True
 
     # Function will determine all the valid actions for the active player
-    def getValidPlayerActions(self,activePlayerIndex,incomingBet):
+    def getValidPlayerActions(self,incomingBet, activePlayerIndex):
         # Copy all the player actions
-        validActions = Action[:]
-
+        validActions = [member for _, member in Action.__members__.items()]
+        print("player index",activePlayerIndex)
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
-        elif incomingBet > self.players[activePlayerIndex].chips:
+        elif incomingBet > self.players[int(activePlayerIndex)].chips:
             # CANNOT CALL -> Not enough chips
             validActions.remove(Action.CALL)
         if (not self.checkFlag) or incomingBet != 0:
             # CANNOT CHECK -> You must call, raise, or fold
             validActions.remove(Action.CHECK)
-        if incomingBet + self.minBet > self.players[activePlayerIndex].chips:
+        if incomingBet + self.minBet > self.players[int(activePlayerIndex)].chips:
             # Not enough chips
             validActions.remove(Action.MIN_BET)
             validActions.remove(Action.LOW_BET)
@@ -120,7 +121,7 @@ class Round:
      # Returns the score of the best hand a player can make.
     def handScore(self,activePlayerIndex):
         # Consolidate cards
-        cards = self.players[activePlayerIndex].handCards() + self.board.community
+        cards = self.players[activePlayerIndex].cardsInHand + self.board.community
 
         SUITS = ["Spades", "Clubs", "Diamonds", "Hearts"]
         
@@ -223,7 +224,6 @@ class Round:
             FULL_HOUSE_LOW = TWO_KIND_VAL
 
         
-        # WARNING: THE STRAIGHT LOGIC HERE IS WRONG, ACE CANNOT BRIDGE KING AND TWO IN A STRAIGHT
         
         # Check for Straight
         # Initialize variables
@@ -238,7 +238,7 @@ class Round:
         # Temporary streak set storage
         streakSet = [vals[0]]
         # Max streak set recorded (used for finding the straight high card)
-        streakSetMax = []
+        streakSetMax = [vals[0]]
         for i in range(12):
             # Look at two cards at a time
             # j is the first (lower)
@@ -284,7 +284,6 @@ class Round:
         # Sort cards for straight flush checking
         cards.sort(key=lambda x: x.value)
 
-        # WARNING: THE STRAIGHT LOGIC HERE IS WRONG, ACE CANNOT BRIDGE KING AND TWO IN A STRAIGHT
 
         # Check for straight flush
         # Initialize variables
@@ -307,7 +306,7 @@ class Round:
             # Max streak recorded
             flushStreakSet = [flushCards[0]]
             # Temporary streak set storage
-            flushStreakSetMax = []
+            flushStreakSetMax = [flushCards[0]]
             # Max streak set recorded (used for finding the straight high card)
             for i in range(flushCards.__len__() * 2):
                 # Look at two cards at a time
@@ -433,7 +432,7 @@ class Round:
 
         # Deal cards
         for i in range(self.players.__len__() * 2):
-            self.players[(i+1+self.buttonPlayerIndex) % self.players.__len__()].dealt(self.deck.top())
+            self.players[(i+1+self.buttonPlayerIndex) % self.players.__len__()].deal(self.deck.top())
         
         
 
@@ -457,6 +456,9 @@ class Round:
             # Checking is enabled at the start of each phase
             # Exception, you cannot check unless the incoming bet is 0,
             # meaning that only the big-blind can check in the pre-flop
+
+            # allow for checking at the beginning of each phase
+            self.checkFlag = True
     
 
             for i in range(self.players.__len__()):
@@ -469,8 +471,15 @@ class Round:
                 else:
                     self.board.activePlayerIndex = self.buttonPlayerIndex
 
+            # If only one player is NOT folding, players are passing manditorily
+            notFoldCount = 0
+            for i in range(self.players.__len__()):
+                if not self.board.playersFolding[i]:
+                    notFoldCount +=1
+
             # Phases change once every player is folded or passing
-            passing = False
+            passing = False if not notFoldCount==1 else True
+
             # i = activePlayerIndex
             while (not passing):
                 # Table turn cycle:
@@ -532,6 +541,13 @@ class Round:
                 for j in range(self.board.playersPassing.__len__()):
                     if self.board.playersPassing[j] == False:
                         passing = False
+                # If only one player is NOT folding, players are passing manditorily
+                notFoldCount = 0
+                for i in range(self.players.__len__()):
+                    if not self.board.playersFolding[i]:
+                        notFoldCount +=1
+                if notFoldCount == 1:
+                    passing = True
             
             # Handle phase change
             # Phase 1-->2 Preflop --> Flop
@@ -557,9 +573,10 @@ class Round:
             # and such, the agent would need to know the community cards, so it might not be
             # worth removing the community knowledge from the players just yet.
             
-            # Update each player's knowledge of the community cards
-            for i in range(self.players.__len__()):
-                self.players[i].communityUpdate(self.board.community)
+            # No longer needed as of now
+            # # Update each player's knowledge of the community cards
+            # for i in range(self.players.__len__()):
+            #     self.players[i].communityUpdate(self.board.community)
             
             # Change phase
             phase += 1
@@ -603,7 +620,7 @@ class Round:
         print(f"Player Scores/Hands:")
         for i in range(self.players.__len__()):
             print(f"Player {self.players[i].id} score: {scores[i]}")
-            print(f"\t hand: {self.players[i].hand()}")
+            print(f"\t hand: " + ", ".join(str(card) for card in self.players[i].cardsInHand))
         
         # If there are multiple winners, tie-break by cards in hand
         if winningIndex.__len__() > 1:
@@ -620,7 +637,7 @@ class Round:
                     tieScores.append(0)
                 # If a winner, calculate tie-break score
                 else:
-                    temp = self.players[i].handCards
+                    temp = self.players[i].cardsInHand
                     temp.sort(key=lambda x: x.value, reverse = True)
                     # tie-break score = high card value * 10 + low card value
                     tieScores.append(temp[0].value * 10 + temp[1].value)
@@ -628,7 +645,7 @@ class Round:
             # Display information about tie-breaker hands
             print("Tie Breaker Hands:")
             for i in winningIndex:
-                print(f"Player {self.players[i].id} hand: {self.players[i].hand()}")
+                print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
 
             # Find winners
             tiebreaker = -1
@@ -658,17 +675,18 @@ class Round:
 
         # Display how much each winner won
         if winningIndex.__len__() == 1:
-            self.players[winningIndex[0]].wins(self.board.pot)
+            self.players[winningIndex[0]].win_round(self.board.pot)
             print(f"Player {self.players[winningIndex[0]].id} wins {self.board.pot} chips!")
         else:
             numWinners = winningIndex.__len__()
             for i in winningIndex:
-                self.players[winningIndex[i]].wins(self.board.pot/numWinners)
+                self.players[winningIndex[i]].win_round(self.board.pot/numWinners)
                 print(f"Player {self.players[winningIndex[i]].id} wins {self.board.pot/numWinners} chips!")
         
-        # Clean players hands
+        # Clean players hands and bets
         for i in range(self.players.__len__()):
-            self.players[i].handCards = []
+            self.players[i].cardsInHand = []
+            self.players[i].current_bet = 0
 
         # Eliminate players as necessary, and update Dealer Button
         temp = []
@@ -695,6 +713,6 @@ class Round:
         print()
         input("Next Round (hit enter to continue)")
 
-        return
+        return self.players
     
     

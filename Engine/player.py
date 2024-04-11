@@ -5,7 +5,7 @@ class Action(Enum):
     MIN_BET = "min_bet"
     LOW_BET = "low_bet"
     MID_BET = "mid_bet"
-    HGH_BET = "hgh_bet"
+    HIGH_BET = "high_bet"
     ALL_IN = "all_in"
     CALL = "call"
     CHECK = "check"
@@ -31,7 +31,8 @@ class Player(ABC):
     # Will be called when the player bets
     def bet(self, amount):
         self.chips -= amount
-        self.bet += amount
+        self.current_bet += amount
+        return amount
 
     # Will be called by round when the player wins a betting round
     def win_round(self, pot):

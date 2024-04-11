@@ -121,7 +121,7 @@ class Round:
      # Returns the score of the best hand a player can make.
     def handScore(self,activePlayerIndex):
         # Consolidate cards
-        cards = self.players[activePlayerIndex].handCards() + self.board.community
+        cards = self.players[activePlayerIndex].cardsInHand + self.board.community
 
         SUITS = ["Spades", "Clubs", "Diamonds", "Hearts"]
         
@@ -606,7 +606,7 @@ class Round:
         print(f"Player Scores/Hands:")
         for i in range(self.players.__len__()):
             print(f"Player {self.players[i].id} score: {scores[i]}")
-            print(f"\t hand: {self.players[i].hand()}")
+            print(f"\t hand: " + ", ".join(str(card) for card in self.players[i].cardsInHand))
         
         # If there are multiple winners, tie-break by cards in hand
         if winningIndex.__len__() > 1:
@@ -623,7 +623,7 @@ class Round:
                     tieScores.append(0)
                 # If a winner, calculate tie-break score
                 else:
-                    temp = self.players[i].handCards
+                    temp = self.players[i].cardsInHand
                     temp.sort(key=lambda x: x.value, reverse = True)
                     # tie-break score = high card value * 10 + low card value
                     tieScores.append(temp[0].value * 10 + temp[1].value)
@@ -631,7 +631,7 @@ class Round:
             # Display information about tie-breaker hands
             print("Tie Breaker Hands:")
             for i in winningIndex:
-                print(f"Player {self.players[i].id} hand: {self.players[i].hand()}")
+                print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
 
             # Find winners
             tiebreaker = -1
@@ -671,7 +671,7 @@ class Round:
         
         # Clean players hands
         for i in range(self.players.__len__()):
-            self.players[i].handCards = []
+            self.players[i].cardsInHand = []
 
         # Eliminate players as necessary, and update Dealer Button
         temp = []

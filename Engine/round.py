@@ -71,8 +71,14 @@ class Round:
         # Update the current bet
         self.board.currentBet = self.board.playerBets[activePlayerIndex]
 
-        # Not passing
-        self.board.playersPassing[activePlayerIndex] = False
+        # Player is passing
+        self.board.playersPassing[activePlayerIndex] = True
+        # Other players must respond to the bet
+        for i in range(self.board.playersPassing.__len__()):
+            if i != activePlayerIndex:
+                self.board.playersPassing[i] = False
+        
+        print(f"Players passing(IN BET): {self.board.playersPassing}")
 
         # Update the pot
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
@@ -80,8 +86,9 @@ class Round:
         # Disable checking if enabled
         if self.checkFlag:
             self.checkFlag = False
-            for i in range(self.board.playersPassing.__len__()):
-                self.board.playersPassing[i] = False
+            # Not needed after the Phase Change Logic Fix
+            # for i in range(self.board.playersPassing.__len__()):
+            #     self.board.playersPassing[i] = False
         
     # handle functionality when active player goes all in
     def handleAllIn(self,activePlayerIndex):
@@ -91,12 +98,26 @@ class Round:
         # Update the stored player bet thus far
         self.board.playerBets[activePlayerIndex] += playerBet
 
+        # Prompt response from other players if the ALL_IN raises the current bet
+        promptResponse = False
+
         # Update the current bet
         if self.board.playerBets[activePlayerIndex] > self.board.currentBet:
             self.board.currentBet = self.board.playerBets[activePlayerIndex]
+            promptResponse = True
 
-        # Passing if they have 0 chips remaining (have already all-inned)
-        self.board.playersPassing[activePlayerIndex] = False if self.players[activePlayerIndex].chips > 0 else True
+        # Old logic:
+        # # Passing if they have 0 chips remaining (have already all-inned)
+        # self.board.playersPassing[activePlayerIndex] = False if self.players[activePlayerIndex].chips > 0 else True
+
+        # Player is passing
+        self.board.playersPassing[activePlayerIndex] = True
+        # If 
+        if promptResponse:
+            # Other players must respond to the bet
+            for i in range(self.board.playersPassing.__len__()):
+                if i != activePlayerIndex:
+                    self.board.playersPassing[i] = False
 
         # Update the pot
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
@@ -104,8 +125,9 @@ class Round:
         # Disable checking if enabled
         if self.checkFlag:
             self.checkFlag = False
-            for i in range(self.board.playersPassing.__len__()):
-                self.board.playersPassing[i] = False
+            # Not needed after the Phase Change Logic Fix
+            # for i in range(self.board.playersPassing.__len__()):
+            #     self.board.playersPassing[i] = False
 
     # handle functionality when active player calls
     def handleCall(self,activePlayerIndex,incomingBet):
@@ -113,7 +135,7 @@ class Round:
         playerBet = incomingBet
         # Update the stored player bet thus far
         self.board.playerBets[activePlayerIndex] += playerBet
-        # Not passing
+        # Player is Passing
         self.board.playersPassing[activePlayerIndex] = True
         # Update the pot
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
@@ -529,7 +551,8 @@ class Round:
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                 else:
                     print("Try again")
-                    continue                
+                    continue            
+                print(f"Players Passing: {self.board.playersPassing}")    
                 # Increment turn!
                 self.board.activePlayerIndex += 1
                 # Handle overflow
@@ -548,6 +571,8 @@ class Round:
                         notFoldCount +=1
                 if notFoldCount == 1:
                     passing = True
+                
+                print(passing)
             
             # Handle phase change
             # Phase 1-->2 Preflop --> Flop

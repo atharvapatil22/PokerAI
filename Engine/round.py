@@ -37,6 +37,7 @@ class Round:
         # Copy all the player actions
         validActions = [member for _, member in Action.__members__.items()]
         print("player index",activePlayerIndex)
+        print("player ID", self.players[activePlayerIndex].id)
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
@@ -80,7 +81,7 @@ class Round:
             if i != activePlayerIndex:
                 self.board.playersPassing[i] = False
         
-        print(f"Players passing(IN BET): {self.board.playersPassing}")
+        # print(f"Players passing(IN BET): {self.board.playersPassing}")
 
         # Update the pot
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
@@ -564,8 +565,10 @@ class Round:
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                 else:
                     print("Try again")
-                    continue            
-                print(f"Players Passing: {self.board.playersPassing}")    
+                    continue
+
+                # print(f"Players Passing: {self.board.playersPassing}")
+
                 # Increment turn!
                 self.board.activePlayerIndex += 1
                 # Handle overflow
@@ -585,7 +588,7 @@ class Round:
                 if notFoldCount == 1:
                     passing = True
                 
-                print(passing)
+                # print(passing)
             
             # Handle phase change
             # Phase 1-->2 Preflop --> Flop

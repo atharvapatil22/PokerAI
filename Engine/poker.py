@@ -26,7 +26,7 @@ class Poker:
         if not shuffleFlag:
             squenceSrc = open(deckSquences, "r")
             squences = squenceSrc.readlines()
-            print(squences)
+            # print(squences)
             for games in squences: #over all possible games
                 gamesqs = list(games.split("[")[1:]) #remove game number formatting
                 # if firstSeq:
@@ -513,7 +513,9 @@ class Poker:
         print(f"THE WINNER IS: PLAYER {self.players[0].id}")
 
 
-testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=True, deckSquences=None) #random decks
+# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=True, deckSquences=None) #random decks
+
+testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences='../Testing/test_sequences.txt')
 
 # testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound.txt") #feed one decks example
 

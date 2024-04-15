@@ -18,7 +18,7 @@ class Deck:
             for cardStringIdx in range(len(deckSequence)): #each card in the deck provided where deck is list of cards
                 # Remove the ',' at the end
                 cardString = deckSequence[cardStringIdx]
-                print(cardString)
+                # print(cardString)
                 # if cardStringIdx < len(deckSequence) - 1: #if not last card, remove the trialing ','
                 #     cardString = cardString[:-1]
                 valString, suitShort = cardString.split(" ") #separate value and suite

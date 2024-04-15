@@ -1,0 +1,1 @@
+Game 1 Sequences: ['K Sp', '4 Di', 'J Cl', '5 Sp', '3 He', 'Q Di', 'Q Sp', 'K He', '5 He']

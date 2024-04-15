@@ -9,6 +9,7 @@ class Round:
             self.community = []
             self.playersPassing = []
             self.playersFolding = []
+            self.playersAllIn = []
             self.playerBets = []
             self.currentBet = 0
             self.activePlayerIndex = 0
@@ -17,6 +18,7 @@ class Round:
             # Setup state arraylists
             for i in range(players.__len__()):
                 self.playersPassing.append(False)
+                self.playersAllIn.append(False)
                 self.playerBets.append(0)
             # Handle the blinds
             self.currentBet = minBet
@@ -35,6 +37,7 @@ class Round:
         # Copy all the player actions
         validActions = [member for _, member in Action.__members__.items()]
         print("player index",activePlayerIndex)
+        print("player ID", self.players[activePlayerIndex].id)
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
@@ -78,7 +81,7 @@ class Round:
             if i != activePlayerIndex:
                 self.board.playersPassing[i] = False
         
-        print(f"Players passing(IN BET): {self.board.playersPassing}")
+        # print(f"Players passing(IN BET): {self.board.playersPassing}")
 
         # Update the pot
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
@@ -128,6 +131,8 @@ class Round:
             # Not needed after the Phase Change Logic Fix
             # for i in range(self.board.playersPassing.__len__()):
             #     self.board.playersPassing[i] = False
+
+        self.board.playersAllIn[activePlayerIndex] = True
 
     # handle functionality when active player calls
     def handleCall(self,activePlayerIndex,incomingBet):
@@ -493,14 +498,15 @@ class Round:
                 else:
                     self.board.activePlayerIndex = self.buttonPlayerIndex
 
-            # If only one player is NOT folding, players are passing manditorily
-            notFoldCount = 0
+            
+            # If only one player is not folding or all-in, players are passing manditorily
+            activePlayerCount = 0
             for i in range(self.players.__len__()):
-                if not self.board.playersFolding[i]:
-                    notFoldCount +=1
+                if not self.board.playersFolding[i] and not self.board.playersAllIn[i]:
+                    activePlayerCount += 1
 
             # Phases change once every player is folded or passing
-            passing = False if not notFoldCount==1 else True
+            passing = False if not activePlayerCount==1 else True
 
             # i = activePlayerIndex
             while (not passing):
@@ -509,6 +515,14 @@ class Round:
                 # Handle folded players
                 if self.board.playersFolding[self.board.activePlayerIndex]:
                     # print(f"Player {players[self.board.activePlayerIndex].id} has folded.")
+                    self.board.playersPassing[self.board.activePlayerIndex] = True
+                    # Increment turn!
+                    self.board.activePlayerIndex += 1
+                    # Handle overflow
+                    self.board.activePlayerIndex = (self.board.activePlayerIndex) % self.players.__len__()
+                    continue
+
+                if self.board.playersAllIn[self.board.activePlayerIndex]:
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                     # Increment turn!
                     self.board.activePlayerIndex += 1
@@ -551,8 +565,10 @@ class Round:
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                 else:
                     print("Try again")
-                    continue            
-                print(f"Players Passing: {self.board.playersPassing}")    
+                    continue
+
+                # print(f"Players Passing: {self.board.playersPassing}")
+
                 # Increment turn!
                 self.board.activePlayerIndex += 1
                 # Handle overflow
@@ -572,7 +588,7 @@ class Round:
                 if notFoldCount == 1:
                     passing = True
                 
-                print(passing)
+                # print(passing)
             
             # Handle phase change
             # Phase 1-->2 Preflop --> Flop

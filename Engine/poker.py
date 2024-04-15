@@ -22,17 +22,27 @@ class Poker:
         self.minBet = minBet
         self.buttonPlayerIndex = 0
         self.squenceDecks = []
+        self.shuffle = shuffleFlag
         if not shuffleFlag:
             squenceSrc = open(deckSquences, "r")
-            squences = squenceSrc.readLines()
+            squences = squenceSrc.readlines()
+            print(squences)
             for games in squences: #over all possible games
-                gamesqs = games.split(" ")[3:] #remove game number formatting
-                for sqs in gamesqs: #for each deck available in the game
-                    cards = shuffleFlag[1,-2].split(",") #remove the deck brackets with trailing ',' then split the cards by ',' 
-                    self.squenceDecks.append(Deck(cards, sqs)) #provide list of decks without brackets or ','
+                gamesqs = list(games.split("[")[1:]) #remove game number formatting
+                # if firstSeq:
+                #     print(gamesqs)
+                for sqs in range(len(gamesqs)): #for each deck available in the 
+                    if sqs < len(gamesqs) - 1:
+                        cards = gamesqs[sqs][:-3] #remove the trailing brackets with trailing ','
+                    else:
+                        cards = gamesqs[sqs][:-2] #remove trailing ] in last sequence
+                    # if firstSeq:
+                    #     print(cards)
+                    #     firstSeq = False
+                    cards = cards.split(', ')
+                    self.squenceDecks.append(Deck(False, cards)) #provide list of decks without brackets or ','
+            print('all decks created')
             squenceSrc.close()
-        else:
-            self.squenceDecks = Deck(shuffleFlag, None)
         
 #     def runRound(self):
 #         # Define some variables
@@ -492,14 +502,24 @@ class Poker:
         # That player is the winner
        
         while self.players.__len__() > 1:
-            deck = Deck()
-            round = Round(self.players, deck, self.minBet, self.buttonPlayerIndex)
+            roundDeck = []
+            if self.shuffle:
+                roundDeck = Deck()
+            else:
+                roundDeck = self.squenceDecks.pop()
+            round = Round(self.players, roundDeck, self.minBet, self.buttonPlayerIndex)
             self.players, self.buttonPlayerIndex = round.runRound()
         
         print(f"THE WINNER IS: PLAYER {self.players[0].id}")
 
 
-testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=True, deckSquences=None)
+testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=True, deckSquences=None) #random decks
+
+# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound.txt") #feed one decks example
+
+# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound2.txt") #feed two deck in one game example
+
+# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound3.txt") #feed 4 decks, 2 for each game example
 
 testGame.runGame()
 

@@ -201,6 +201,7 @@ class Round:
         # Check for 3 of a kind
         THREE_KIND = False
         THREE_KIND_VAL = 0
+        THREE_KIND_SECONDARY = 0
         # Check for 2 of a kind
         TWO_KIND = False
         TWO_KIND_VAL = 0
@@ -214,8 +215,12 @@ class Round:
                 FOUR_KIND = True
                 FOUR_KIND_VAL = val
             elif vals.count(val) == 3:
-                THREE_KIND = True
-                THREE_KIND_VAL = val
+                if THREE_KIND == True:
+                    THREE_KIND_SECONDARY = THREE_KIND_VAL
+                    THREE_KIND_VAL = val
+                else:
+                    THREE_KIND = True
+                    THREE_KIND_VAL = val
             elif vals.count(val) == 2:
                 # If two pairs have already been detected, shift the values down
                 if TWO_PAIRS:
@@ -249,6 +254,10 @@ class Round:
             FULL_HOUSE = True
             FULL_HOUSE_HIGH = THREE_KIND_VAL
             FULL_HOUSE_LOW = TWO_KIND_VAL
+        elif THREE_KIND and THREE_KIND_SECONDARY != 0:
+            FULL_HOUSE = True
+            FULL_HOUSE_HIGH = THREE_KIND_VAL
+            FULL_HOUSE_LOW = THREE_KIND_SECONDARY
 
         
         
@@ -402,23 +411,23 @@ class Round:
         # Four of a kind == 800 points + quad card value
         elif FOUR_KIND:
             score = 800 + FOUR_KIND_VAL
-        # Full house == 700 points + triple card value + (double card value / 10) 
+        # Full house == 700 points + triple card value + (double card value / 100) 
         elif FULL_HOUSE:
-            score = 700 + FULL_HOUSE_HIGH + FULL_HOUSE_LOW/10
-        # Flush == 600 points + high card value
+            score = 700 + FULL_HOUSE_HIGH + FULL_HOUSE_LOW/100
+        # Flush == 600 points + high card value + next high card value / 100 + next high card value / 10000 + etc.
         elif FLUSH:
-            # THERE COULD BE AN INNACCURACY HERE
-            # score = 600 + FLUSH_HIGH
-            score = 600 + flushSet[0] + flushSet[1]/10 + flushSet[2]/100 + flushSet[3]/1000 + flushSet[4]/10000
+            score = 600 + flushSet[0] + flushSet[1]/100 + flushSet[2]/10000 + flushSet[3]/1000000 + flushSet[4]/100000000
         # Straight == 500 points + high card value
         elif STRAIGHT:
             score = 500 + STRAIGHT_HIGH
         # Three of a kind == 400 points + triple card value
         elif THREE_KIND:
             score = 400 + THREE_KIND_VAL
-        # Two pair == 300 points + high double value + (low double value / 10)
+        # Two pair == 300 points + high double value + (low double value / 100)
         elif TWO_PAIRS:
-            score = 300 + TWO_PAIRS_HIGH + TWO_KIND/10
+            score = 300 + TWO_PAIRS_HIGH + TWO_KIND_VAL/100
+            print(f"TWO_PAIRS_HIGH: {TWO_PAIRS_HIGH}")
+            print(f"TWO_KIND_VAL: {TWO_KIND_VAL}")
         # One pair == 200 points + double value
         elif TWO_KIND:
             score = 200 + TWO_KIND_VAL
@@ -428,6 +437,7 @@ class Round:
 
         # Ties will be broken by whichever player has the higher cards in hand
         return score
+
         
 
     def runRound(self):

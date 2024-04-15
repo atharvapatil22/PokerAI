@@ -12,7 +12,7 @@ class Deck:
                     self.cards.append(Card(i+2, suit))
             self.shuffle()
         else:
-            print(deckSequence)
+            # print(deckSequence)
             # Parse deckSequence
             # Each card will be in the form: "'<#|T|J|Q|K|A> <Sp|Cl|Di|He>'"
             for cardStringIdx in range(len(deckSequence)): #each card in the deck provided where deck is list of cards

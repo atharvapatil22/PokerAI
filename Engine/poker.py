@@ -19,6 +19,7 @@ class Poker:
         self.players = []
         for i in range(players.__len__()):
             players[i].chips = startChips
+            players[i].nextGame()
             self.players.append(players[i])
         self.minBet = minBet
         self.buttonPlayerIndex = 0
@@ -533,5 +534,5 @@ testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet =
 
 # testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound3.txt") #feed 4 decks, 2 for each game example
 
-# testGame.runGame()
+testGame.runGame()
 

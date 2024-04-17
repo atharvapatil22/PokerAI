@@ -759,6 +759,11 @@ class Round:
         # so that if players are eliminated, the poker engine can communicate that to the
         # next round.
 
+        # Before self.players is updated, record the chip totals of every player in this round
+        for i in range(self.players.__len__()):
+            self.players[i].recordChips()
+            # print(f"Player {self.players[i].id} record: {self.players[i].chipRecord}")
+
         # Eliminate players in object field
         self.players = temp
         print()

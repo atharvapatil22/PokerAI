@@ -508,12 +508,11 @@ class Poker:
             if self.shuffle:
                 roundDeck = Deck()
             else:
-                if len(self.squenceDecks) == 0:#all games completed
-                    break
-                else: #games remaining
-                    if len(self.squenceDecks[0]) == 0: #all sequences completed
-                        self.squenceDecks.pop(0) #swap to next game
-                    roundDeck = self.squenceDecks[0].pop(0) #get next sequence
+                if len(self.squenceDecks[0]) == 0: #game still has no sequences remaining
+                    self.squenceDecks.pop(0) #switch to next game
+                    if len(self.squenceDecks) == 0: #if no games left, end
+                        break
+                roundDeck = self.squenceDecks[0].pop(0)
             round = Round(self.players, roundDeck, self.minBet, self.buttonPlayerIndex)
             self.players, self.buttonPlayerIndex = round.runRound()
         

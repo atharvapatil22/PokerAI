@@ -3,6 +3,7 @@ from realPlayer import RealPlayer
 from player import Player
 from deck import Deck
 from round import Round
+from call_agent import CallAgent
 
 # general idea, poker will have rounds that take players array as parameters and return players array 
 # play will continue until self.players array has size 1
@@ -17,8 +18,9 @@ class Poker:
 
     def __init__(self, numPlayers, startChips, minBet, shuffleFlag=True, deckSquences=None) -> None:
         self.players = []
-        for i in range(numPlayers):
-            self.players.append(RealPlayer(i+1, startChips))
+        # for i in range(numPlayers):
+        self.players.append(RealPlayer(1, startChips))
+        self.players.append(CallAgent(2, startChips))
         self.minBet = minBet
         self.buttonPlayerIndex = 0
         self.squenceDecks = []

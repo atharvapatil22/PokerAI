@@ -12,14 +12,19 @@ class Deck:
                     self.cards.append(Card(i+2, suit))
             self.shuffle()
         else:
+            # print(deckSequence)
             # Parse deckSequence
-            # Each card will be in the form: "[<#|T|J|Q|K|A> <Sp|Cl|Di|He>]"
+            # Each card will be in the form: "'<#|T|J|Q|K|A> <Sp|Cl|Di|He>'"
             for cardStringIdx in range(len(deckSequence)): #each card in the deck provided where deck is list of cards
                 # Remove the ',' at the end
                 cardString = deckSequence[cardStringIdx]
-                if cardStringIdx < len(deckSequence) - 1: #if not last card, remove the trialing ','
-                    cardString = cardString[:-1]
+                # print(cardString)
+                # if cardStringIdx < len(deckSequence) - 1: #if not last card, remove the trialing ','
+                #     cardString = cardString[:-1]
                 valString, suitShort = cardString.split(" ") #separate value and suite
+                #remove trailing \'
+                valString = valString[1:]
+                suitShort = suitShort[:-1] 
                 val = 0
                 suit = ""
                 # Parse val

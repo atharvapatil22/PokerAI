@@ -28,11 +28,12 @@ class Poker:
             squences = squenceSrc.readlines()
             # print(squences)
             for games in squences: #over all possible games
-                gamesqs = list(games.split("[")[1:]) #remove game number formatting
+                game = [] #collect all sqs in a game
+                gamesqs = list(games.split("[")[1:]) #remove game number formatting and isolate game sequences
                 # if firstSeq:
                 #     print(gamesqs)
-                for sqs in range(len(gamesqs)): #for each deck available in the 
-                    if sqs < len(gamesqs) - 1:
+                for sqs in range(len(gamesqs)): #for each deck available in the sequence
+                    if sqs < len(gamesqs) - 1: #if not last sequence
                         cards = gamesqs[sqs][:-3] #remove the trailing brackets with trailing ','
                     else:
                         cards = gamesqs[sqs][:-2] #remove trailing ] in last sequence
@@ -40,7 +41,8 @@ class Poker:
                     #     print(cards)
                     #     firstSeq = False
                     cards = cards.split(', ')
-                    self.squenceDecks.append(Deck(False, cards)) #provide list of decks without brackets or ','
+                    game.append(Deck(False, cards)) #add current sequence to associated game
+                self.squenceDecks.append(game) #add game
             print('all decks created')
             squenceSrc.close()
         
@@ -506,7 +508,12 @@ class Poker:
             if self.shuffle:
                 roundDeck = Deck()
             else:
-                roundDeck = self.squenceDecks.pop(0)
+                if len(self.squenceDecks) == 0:#all games completed
+                    break
+                else: #games remaining
+                    if len(self.squenceDecks[0]) == 0: #all sequences completed
+                        self.squenceDecks.pop(0) #swap to next game
+                    roundDeck = self.squenceDecks[0].pop(0) #get next sequence
             round = Round(self.players, roundDeck, self.minBet, self.buttonPlayerIndex)
             self.players, self.buttonPlayerIndex = round.runRound()
         

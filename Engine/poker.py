@@ -506,7 +506,7 @@ class Poker:
             if self.shuffle:
                 roundDeck = Deck()
             else:
-                roundDeck = self.squenceDecks.pop()
+                roundDeck = self.squenceDecks.pop(0)
             round = Round(self.players, roundDeck, self.minBet, self.buttonPlayerIndex)
             self.players, self.buttonPlayerIndex = round.runRound()
         

@@ -14,12 +14,7 @@ class MonteCarloAgent(Agent):
         simulations = 1000
         for _ in range(simulations):
             deck = Deck(True, None)
-            cards_to_remove = []
-            for card in deck.cards:
-                for card_in_hand in cards_in_hand:
-                    if str(card) == str(card_in_hand):
-                        cards_to_remove.append(card)
-            for card in cards_to_remove:
+            for card in cards_in_hand:
                 deck.cards.remove(card)
             opponent_hand = [deck.top(), deck.top()]
             hand = cards_in_hand + community_cards

@@ -119,8 +119,11 @@ class Round:
         if promptResponse:
             # Other players must respond to the bet
             for i in range(self.board.playersPassing.__len__()):
-                if i != activePlayerIndex:
-                    self.board.playersPassing[i] = False
+                if i == activePlayerIndex:
+                    continue
+                elif self.board.playersAllIn[i]:
+                    continue
+                self.board.playersPassing[i] = False
 
         # Update the pot
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
@@ -516,7 +519,7 @@ class Round:
                     activePlayerCount += 1
 
             # Phases change once every player is folded or passing
-            passing = False if not activePlayerCount==1 else True
+            passing = True if activePlayerCount<=1 else False
 
             # i = activePlayerIndex
             while (not passing):

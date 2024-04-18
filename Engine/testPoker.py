@@ -21,7 +21,6 @@ class TestPoker:
     def __init__(self, startChips, minBet):
         self.startChips = startChips
         self.minBet = minBet
-        self.initPlayers = []
         self.players = []
         self.playerIDCount = 1
         self.pokerGameDeckSequences = []
@@ -60,11 +59,9 @@ class TestPoker:
     def runTest(self):
         for i in range(self.pokerGameDeckSequences.__len__()):
             pokerInstance = Poker(self.players, self.startChips, self.minBet, False, self.pokerGameDeckSequences[i])
-            newPlayers = pokerInstance.runGame()
+            pokerInstance.runGame()
             # Handle new information about players here if necessary
-            self.players = newPlayers
-            if self.players.__len__() == 1:
-                break
+            
 
         return self.players
 
@@ -73,7 +70,6 @@ class TestPoker:
 
     def addRealPlayer(self):
         temp = RealPlayer(self.playerIDCount, 0)
-        self.initPlayers.append(temp)
         self.players.append(temp)
         self.playerIDCount += 1
 
@@ -89,7 +85,7 @@ test.runTest()
 print("RESULT")
 for i in range(test.players.__len__()):
     print(f"Player {test.players[i].id} record: {test.players[i].chipRecord}")
-print("INITIAL")
-for i in range(test.initPlayers.__len__()):
-    print(f"Player {test.initPlayers[i].id} record: {test.initPlayers[i].chipRecord}")
+# print("INITIAL")
+# for i in range(test.initPlayers.__len__()):
+#     print(f"Player {test.initPlayers[i].id} record: {test.initPlayers[i].chipRecord}")
 

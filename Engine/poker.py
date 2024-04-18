@@ -16,7 +16,7 @@ from call_agent import CallAgent
 
 class Poker:
 
-    def __init__(self, players, startChips, minBet, shuffleFlag=True, deckSequences=None) -> None:
+    def __init__(self, players, startChips, minBet, shuffleFlag=True, deckSequences=None, supressOutput=False) -> None:
         self.players = []
         for i in range(players.__len__()):
             players[i].chips = startChips
@@ -24,6 +24,7 @@ class Poker:
             self.players.append(players[i])
         self.minBet = minBet
         self.buttonPlayerIndex = 0
+        self.supressOutput = supressOutput
         self.shuffle = shuffleFlag
 
         self.sequenceDecks = deckSequences
@@ -518,10 +519,11 @@ class Poker:
                     break
                 roundDeck = self.sequenceDecks.pop(0)
                 # print(roundDeck)
-            round = Round(self.players, roundDeck, self.minBet, self.buttonPlayerIndex)
+            round = Round(self.players, roundDeck, self.minBet, self.buttonPlayerIndex, self.supressOutput)
             self.players, self.buttonPlayerIndex = round.runRound()
         
-        print(f"THE WINNER IS: PLAYER {self.players[0].id}")
+        if not self.supressOutput:
+            print(f"THE WINNER IS: PLAYER {self.players[0].id}")
         return self.players
 
 

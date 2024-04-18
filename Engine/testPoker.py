@@ -9,6 +9,7 @@ from deck import Deck
 from poker import Poker
 from player import Player
 from realPlayer import RealPlayer
+from call_agent import CallAgent
 
 class TestPoker:
 
@@ -58,7 +59,7 @@ class TestPoker:
     
     def runTest(self):
         for i in range(self.pokerGameDeckSequences.__len__()):
-            pokerInstance = Poker(self.players, self.startChips, self.minBet, False, self.pokerGameDeckSequences[i])
+            pokerInstance = Poker(self.players, self.startChips, self.minBet, False, self.pokerGameDeckSequences[i], supressOutput=True)
             pokerInstance.runGame()
             # Handle new information about players here if necessary
             
@@ -72,20 +73,34 @@ class TestPoker:
         temp = RealPlayer(self.playerIDCount, 0)
         self.players.append(temp)
         self.playerIDCount += 1
+    
+    def addCallAgent(self):
+        temp = CallAgent(self.playerIDCount, 0)
+        self.players.append(temp)
+        self.playerIDCount += 1
 
 ###### DEFAULT OPTIONS:
 print("hello")
 test = TestPoker(100, 2)
-test.addRealPlayer()
-test.addRealPlayer()
+# test.addRealPlayer()
+# test.addRealPlayer()
+test.addCallAgent()
+test.addCallAgent()
 # test.parseFile("../Testing/test_sequencesRound.txt")
-test.parseFile("../Testing/test_sequencesRound3.txt")
+# test.parseFile("../Testing/test_sequencesRound3.txt")
+test.parseFile("../Testing/test_sequences.txt")
 test.runTest()
 
 print("RESULT")
-for i in range(test.players.__len__()):
-    print(f"Player {test.players[i].id} record: {test.players[i].chipRecord}")
-# print("INITIAL")
-# for i in range(test.initPlayers.__len__()):
-#     print(f"Player {test.initPlayers[i].id} record: {test.initPlayers[i].chipRecord}")
+
+output1 = open("../Testing/p1Output.txt", "a")
+output2 = open("../Testing/p2Output.txt", "a")
+
+print(f"Player {test.players[0].id} record: {test.players[0].chipRecord}", file=output1)
+print(f"Player {test.players[1].id} record: {test.players[1].chipRecord}", file=output2)
+
+output1.close()
+output2.close()
+
+
 

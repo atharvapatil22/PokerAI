@@ -16,41 +16,44 @@ from call_agent import CallAgent
 
 class Poker:
 
-    def __init__(self, numPlayers, startChips, minBet, shuffleFlag=True, deckSquences=None) -> None:
+    def __init__(self, players, startChips, minBet, shuffleFlag=True, deckSequences=None) -> None:
         self.players = []
-        # for i in range(numPlayers):
-        self.players.append(RealPlayer(1, startChips))
-        self.players.append(CallAgent(2, startChips))
+        for i in range(players.__len__()):
+            players[i].chips = startChips
+            players[i].nextGame()
+            self.players.append(players[i])
         self.minBet = minBet
         self.buttonPlayerIndex = 0
-        self.squenceDecks = []
         self.shuffle = shuffleFlag
-        if not shuffleFlag:
-            squenceSrc = open(deckSquences, "r")
-            squences = squenceSrc.readlines()
-            # print(squences)
-            for games in squences: #over all possible games
-                game = [] #collect all sqs in a game
-                gamesqs = list(games.split("[")[1:]) #remove game number formatting and isolate game sequences
-                # if firstSeq:
-                #     print(gamesqs)
-                for sqs in range(len(gamesqs)): #for each deck available in the sequence
-                    if sqs < len(gamesqs) - 1: #if not last sequence
-                        cards = gamesqs[sqs][:-3] #remove the trailing brackets with trailing ','
-                    else:
-                        cards = gamesqs[sqs][:-2] #remove trailing ] in last sequence
-                    # if firstSeq:
-                    #     print(cards)
-                    #     firstSeq = False
-                    cards = cards.split(', ')
-                    game.append(Deck(False, cards)) #add current sequence to associated game
-                self.squenceDecks.append(game) #add game
-            print('all decks created')
-            squenceSrc.close()
+
+        self.sequenceDecks = deckSequences
+        # self.sequenceDecks = []
+        # if not shuffleFlag:
+        #     sequenceSrc = open(decksequences, "r")
+        #     sequences = sequenceSrc.readlines()
+        #     # print(sequences)
+        #     for games in sequences: #over all possible games
+        #         game = [] #collect all sqs in a game
+        #         gamesqs = list(games.split("[")[1:]) #remove game number formatting and isolate game sequences
+        #         # if firstSeq:
+        #         #     print(gamesqs)
+        #         for sqs in range(len(gamesqs)): #for each deck available in the sequence
+        #             if sqs < len(gamesqs) - 1: #if not last sequence
+        #                 cards = gamesqs[sqs][:-3] #remove the trailing brackets with trailing ','
+        #             else:
+        #                 cards = gamesqs[sqs][:-2] #remove trailing ] in last sequence
+        #             # if firstSeq:
+        #             #     print(cards)
+        #             #     firstSeq = False
+        #             cards = cards.split(', ')
+        #             game.append(Deck(False, cards)) #add current sequence to associated game
+        #         self.sequenceDecks.append(game) #add game
+        #     print('all decks created')
+        #     sequenceSrc.close()
         
 #     def runRound(self):
 #         # Define some variables
-#         deck = self.squenceDecks #retrieve deck from pre-generated sequence, this could be a list or a single deck based on the shuffle flag
+#         deck = self.sequenceDecks #retrieve deck from pre-generated sequence, this could be a list or a single deck based on the shuffle flag
 #         players = self.players
 #         playersPassing = []
 #         playersFolding = []
@@ -507,29 +510,30 @@ class Poker:
        
         while self.players.__len__() > 1:
             roundDeck = []
+            # print(f"sequenceDecks: {self.sequenceDecks}")
             if self.shuffle:
                 roundDeck = Deck()
             else:
-                if len(self.squenceDecks[0]) == 0: #game still has no sequences remaining
-                    self.squenceDecks.pop(0) #switch to next game
-                    if len(self.squenceDecks) == 0: #if no games left, end
-                        break
-                roundDeck = self.squenceDecks[0].pop(0)
+                if len(self.sequenceDecks) == 0: #game still has no sequences remaining
+                    break
+                roundDeck = self.sequenceDecks.pop(0)
+                # print(roundDeck)
             round = Round(self.players, roundDeck, self.minBet, self.buttonPlayerIndex)
             self.players, self.buttonPlayerIndex = round.runRound()
         
         print(f"THE WINNER IS: PLAYER {self.players[0].id}")
+        return self.players
 
 
-# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=True, deckSquences=None) #random decks
+testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=True, deckSequences=None) #random decks
 
-testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences='../Testing/test_sequences.txt')
+# testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, decksequences='../Testing/test_sequences.txt')
 
-# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound.txt") #feed one decks example
+# testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, decksequences="../Testing/test_sequencesRound.txt") #feed one decks example
 
-# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound2.txt") #feed two deck in one game example
+# testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, decksequences="../Testing/test_sequencesRound2.txt") #feed two deck in one game example
 
-# testGame = Poker(numPlayers = 2,startChips = 100, minBet = 2, shuffleFlag=False, deckSquences="../Testing/test_sequencesRound3.txt") #feed 4 decks, 2 for each game example
+# testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, decksequences="../Testing/test_sequencesRound3.txt") #feed 4 decks, 2 for each game example
 
-testGame.runGame()
+# testGame.runGame()
 

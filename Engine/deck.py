@@ -60,5 +60,8 @@ class Deck:
 
     def top(self):
         return self.cards.pop()
+    
+    def __str__(self):
+        return ", ".join(str(card) for card in self.cards)
 
     

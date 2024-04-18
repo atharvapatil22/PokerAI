@@ -21,6 +21,7 @@ class TestPoker:
     def __init__(self, startChips, minBet):
         self.startChips = startChips
         self.minBet = minBet
+        self.initPlayers = []
         self.players = []
         self.playerIDCount = 1
         self.pokerGameDeckSequences = []
@@ -62,6 +63,8 @@ class TestPoker:
             newPlayers = pokerInstance.runGame()
             # Handle new information about players here if necessary
             self.players = newPlayers
+            if self.players.__len__() == 1:
+                break
 
         return self.players
 
@@ -69,7 +72,9 @@ class TestPoker:
 ###### once agents have been implemneted, the options for adding agents to this test class will be added
 
     def addRealPlayer(self):
-        test.players.append(RealPlayer(self.playerIDCount, 0))
+        temp = RealPlayer(self.playerIDCount, 0)
+        self.initPlayers.append(temp)
+        self.players.append(temp)
         self.playerIDCount += 1
 
 ###### DEFAULT OPTIONS:
@@ -77,4 +82,14 @@ print("hello")
 test = TestPoker(100, 2)
 test.addRealPlayer()
 test.addRealPlayer()
-test.parseFile("../Testing/test_sequencesRound.txt")
+# test.parseFile("../Testing/test_sequencesRound.txt")
+test.parseFile("../Testing/test_sequencesRound3.txt")
+test.runTest()
+
+print("RESULT")
+for i in range(test.players.__len__()):
+    print(f"Player {test.players[i].id} record: {test.players[i].chipRecord}")
+print("INITIAL")
+for i in range(test.initPlayers.__len__()):
+    print(f"Player {test.initPlayers[i].id} record: {test.initPlayers[i].chipRecord}")
+

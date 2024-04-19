@@ -8,6 +8,8 @@ class CallAgent(Agent):
         action = None
         if Action.CALL in validActions:
             action = Action.CALL
-        else:
+        elif Action.CHECK in validActions:
             action = Action.CHECK
+        else :
+            action = Action.ALL_IN
         return action

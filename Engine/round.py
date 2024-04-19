@@ -35,20 +35,23 @@ class Round:
             self.currentBet = minBet
 
 
-    def __init__(self, players, deck, minBet, buttonPlayerIndex = 0):
+
+    def __init__(self, players, deck, minibet, buttonPlayerIndex = 0, supressOutput=False):
         self.players = players
         self.deck = deck
         self.minBet = minBet
         self.buttonPlayerIndex = buttonPlayerIndex
         self.board = self.Board(players,self.minBet)
         self.checkFlag = True
+        self.supressOuptut = supressOutput
 
     # Function will determine all the valid actions for the active player
     def getValidPlayerActions(self,incomingBet, activePlayerIndex):
         # Copy all the player actions
         validActions = [member for _, member in Action.__members__.items()]
-        print("player index",activePlayerIndex)
-        print("player ID", self.players[activePlayerIndex].id)
+        if not self.supressOuptut:
+            print("player index",activePlayerIndex)
+            print("player ID", self.players[activePlayerIndex].id)
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
@@ -131,8 +134,11 @@ class Round:
         if promptResponse:
             # Other players must respond to the bet
             for i in range(self.board.playersPassing.__len__()):
-                if i != activePlayerIndex:
-                    self.board.playersPassing[i] = False
+                if i == activePlayerIndex:
+                    continue
+                elif self.board.playersAllIn[i]:
+                    continue
+                self.board.playersPassing[i] = False
 
         # Update the pot
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
@@ -439,8 +445,8 @@ class Round:
         # Two pair == 300 points + high double value + (low double value / 100)
         elif TWO_PAIRS:
             score = 300 + TWO_PAIRS_HIGH + TWO_KIND_VAL/100
-            print(f"TWO_PAIRS_HIGH: {TWO_PAIRS_HIGH}")
-            print(f"TWO_KIND_VAL: {TWO_KIND_VAL}")
+            # print(f"TWO_PAIRS_HIGH: {TWO_PAIRS_HIGH}")
+            # print(f"TWO_KIND_VAL: {TWO_KIND_VAL}")
         # One pair == 200 points + double value
         elif TWO_KIND:
             score = 200 + TWO_KIND_VAL
@@ -532,7 +538,7 @@ class Round:
                     activePlayerCount += 1
 
             # Phases change once every player is folded or passing
-            passing = False if not activePlayerCount==1 else True
+            passing = True if activePlayerCount<=1 else False
 
             # i = activePlayerIndex
             while (not passing):
@@ -584,13 +590,15 @@ class Round:
                     # Passing
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                 elif action == Action.FOLD:
-                    print("You have folded")
+                    if not self.supressOuptut:
+                        print("You have folded")
                     # Folded
                     self.board.playersFolding[self.board.activePlayerIndex] = True
                     # Passing
                     self.board.playersPassing[self.board.activePlayerIndex] = True
                 else:
-                    print("Try again")
+                    if not self.supressOuptut:
+                        print("Try again")
                     continue
 
                 # print(f"Players Passing: {self.board.playersPassing}")
@@ -631,11 +639,13 @@ class Round:
             # Phase 4-->5 River --> Scores
             elif phase == 4:
             # elif self.board.phase == 4:
-                print("Time for the results!")
+                if not self.supressOuptut:
+                    print("Time for the results!")
             # This should never occur, the prints are for debuggging in case it does
             else:
-                print("SOMETHING HAS GONE WRONG WITH THE PHASES!")
-                print(f"THIS WAS PHASE {phase}!!!")
+                if not self.supressOuptut:
+                    print("SOMETHING HAS GONE WRONG WITH THE PHASES!")
+                    print(f"THIS WAS PHASE {phase}!!!")
 
             # REFNOTE: Eventually this might become unnecessary due to the functionality
             # of checking score being planned to move to the Engine class instead of the
@@ -686,20 +696,22 @@ class Round:
             communityString += "]"
 
         # Print player scores and hands (along with community cards for context)
-        print()
-        print(f"River State: {communityString}")
-        print()
-        print(f"Player Scores/Hands:")
-        for i in range(self.players.__len__()):
-            print(f"Player {self.players[i].id} score: {scores[i]}")
-            print(f"\t hand: " + ", ".join(str(card) for card in self.players[i].cardsInHand))
+        if not self.supressOuptut:
+            print()
+            print(f"River State: {communityString}")
+            print()
+            print(f"Player Scores/Hands:")
+            for i in range(self.players.__len__()):
+                print(f"Player {self.players[i].id} score: {scores[i]}")
+                print(f"\t hand: " + ", ".join(str(card) for card in self.players[i].cardsInHand))
         
         # If there are multiple winners, tie-break by cards in hand
         if winningIndex.__len__() > 1:
             # Display information about multiple winners
-            print(f"The winners are:")
-            for i in winningIndex:
-                print(f"Player {self.players[i].id}")
+            if not self.supressOuptut:
+                print(f"The winners are:")
+                for i in winningIndex:
+                    print(f"Player {self.players[i].id}")
             
             # Identify tie-break scores
             tieScores = []
@@ -715,9 +727,10 @@ class Round:
                     tieScores.append(temp[0].value * 10 + temp[1].value)
             
             # Display information about tie-breaker hands
-            print("Tie Breaker Hands:")
-            for i in winningIndex:
-                print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
+            if not self.supressOuptut:
+                print("Tie Breaker Hands:")
+                for i in winningIndex:
+                    print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
 
             # Find winners
             tiebreaker = -1
@@ -732,28 +745,33 @@ class Round:
 
             # Display information about who won the tie-break
             winningIndex = tieWinningIndex
-            if winningIndex.__len__() == 1:
-                print(f"The tiebreak winner is: Player {winningIndex[0] + 1}")
-            else:
-                print(f"The tiebreak winners are:")
-                for i in winningIndex:
-                    print(f"Player {self.players[i].id}")
+            if not self.supressOuptut:
+                if winningIndex.__len__() == 1:
+                    print(f"The tiebreak winner is: Player {winningIndex[0] + 1}")
+                else:
+                    print(f"The tiebreak winners are:")
+                    for i in winningIndex:
+                        print(f"Player {self.players[i].id}")
         else: 
             # Display information about who won the pot
-            print(f"The winner is: Player {winningIndex[0] + 1}")
+            if not self.supressOuptut:
+                print(f"The winner is: Player {winningIndex[0] + 1}")
         
         # Display pot won
-        print(f"The pot won is: {self.board.pot} chips!!!")
+        if not self.supressOuptut:
+            print(f"The pot won is: {self.board.pot} chips!!!")
 
         # Display how much each winner won
         if winningIndex.__len__() == 1:
             self.players[winningIndex[0]].win_round(self.board.pot)
-            print(f"Player {self.players[winningIndex[0]].id} wins {self.board.pot} chips!")
+            if not self.supressOuptut:
+                print(f"Player {self.players[winningIndex[0]].id} wins {self.board.pot} chips!")
         else:
             numWinners = winningIndex.__len__()
             for i in winningIndex:
                 self.players[winningIndex[i]].win_round(self.board.pot/numWinners)
-                print(f"Player {self.players[winningIndex[i]].id} wins {self.board.pot/numWinners} chips!")
+                if not self.supressOuptut:
+                    print(f"Player {self.players[winningIndex[i]].id} wins {self.board.pot/numWinners} chips!")
         
         # Clean players hands and bets
         for i in range(self.players.__len__()):
@@ -780,10 +798,16 @@ class Round:
         # so that if players are eliminated, the poker engine can communicate that to the
         # next round.
 
+        # Before self.players is updated, record the chip totals of every player in this round
+        for i in range(self.players.__len__()):
+            self.players[i].recordChips()
+            # print(f"Player {self.players[i].id} record: {self.players[i].chipRecord}")
+
         # Eliminate players in object field
         self.players = temp
-        print()
-        input("Next Round (hit enter to continue)")
+        if not self.supressOuptut:
+            print()
+            input("Next Round (hit enter to continue)")
 
         return self.players, self.buttonPlayerIndex
     

@@ -58,10 +58,20 @@ class TestPoker:
         return self.pokerGameDeckSequences
     
     def runTest(self):
+        p1_wins = 0
+        p2_wins = 0
         for i in range(self.pokerGameDeckSequences.__len__()):
             pokerInstance = Poker(self.players, self.startChips, self.minBet, False, self.pokerGameDeckSequences[i], supressOutput=True)
-            pokerInstance.runGame()
+            winner = pokerInstance.runGame()
+            if winner[0].id == self.players[0].id:
+                p1_wins += 1
+            else:
+                p2_wins += 1
+            print(f"Game {i} complete")
             # Handle new information about players here if necessary
+        print(f"Player 1 win percentage: {p1_wins / self.pokerGameDeckSequences.__len__()}")
+        print(f"Player 2 win percentage: {p2_wins / self.pokerGameDeckSequences.__len__()}")
+            
             
 
         return self.players
@@ -93,8 +103,8 @@ test.runTest()
 
 print("RESULT")
 
-output1 = open("../Testing/p1Output.txt", "a")
-output2 = open("../Testing/p2Output.txt", "a")
+output1 = open("../Testing/p1Output.txt", "w")
+output2 = open("../Testing/p2Output.txt", "w")
 
 print(f"Player {test.players[0].id} record: {test.players[0].chipRecord}", file=output1)
 print(f"Player {test.players[1].id} record: {test.players[1].chipRecord}", file=output2)

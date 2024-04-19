@@ -36,7 +36,7 @@ class Round:
 
 
 
-    def __init__(self, players, deck, minibet, buttonPlayerIndex = 0, supressOutput=False):
+    def __init__(self, players, deck, minBet, buttonPlayerIndex = 0, supressOutput=False):
         self.players = players
         self.deck = deck
         self.minBet = minBet

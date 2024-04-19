@@ -10,6 +10,7 @@ class Action(Enum):
     CALL = "call"
     CHECK = "check"
     FOLD = "fold"
+    OP_MAX = "op_max" # Short for "Opponent_Max"
 
 class Player(ABC):
 

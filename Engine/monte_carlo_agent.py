@@ -141,6 +141,27 @@ class MonteCarloAgent(Agent):
                 validActions.remove(Action.LOW_BET)
                 validActions.remove(Action.MID_BET)
                 validActions.remove(Action.HIGH_BET)
+            # OP_MAX action handling
+            opponentIdx = (board.activePlayerIndex + 1) % board.players.__len__()
+            if self.players[int(opponentIdx)].chips == 0:
+                # Opponent is already all in
+                validActions.remove(Action.OP_MAX)
+                validActions.remove(Action.MIN_BET)
+                validActions.remove(Action.MID_BET)
+                validActions.remove(Action.HIGH_BET)
+            if board.players[int(opponentIdx)].chips + incomingBet >= board.players[int(board.activePlayerIndex)].chips:
+                # Not enough chips to overbet other player
+                validActions.remove(Action.OP_MAX)
+            else:
+                # These actions would now overbet the opponent max
+                validActions.remove(Action.ALL_IN)
+                opponentMax = board.players[int(opponentIdx)].chips
+                if incomingBet + board.players[board.activePlayerIndex].chips * 0.1 > opponentMax:
+                    validActions.remove(Action.LOW_BET)
+                if incomingBet + board.players[board.activePlayerIndex].chips * 0.4 > opponentMax:
+                    validActions.remove(Action.MID_BET)
+                if incomingBet + board.players[board.activePlayerIndex].chips * 0.7 > opponentMax:
+                    validActions.remove(Action.HIGH_BET)
             
             return validActions
 

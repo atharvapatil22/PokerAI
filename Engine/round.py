@@ -36,7 +36,7 @@ class Round:
 
 
 
-    def __init__(self, players, deck, minibet, buttonPlayerIndex = 0, supressOutput=False):
+    def __init__(self, players, deck, minBet, buttonPlayerIndex = 0, supressOutput=False):
         self.players = players
         self.deck = deck
         self.minBet = minBet
@@ -55,7 +55,7 @@ class Round:
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
-        elif incomingBet > self.players[int(activePlayerIndex)].chips:
+        elif incomingBet >= self.players[int(activePlayerIndex)].chips:
             # CANNOT CALL -> Not enough chips
             validActions.remove(Action.CALL)
         if (not self.checkFlag) or incomingBet != 0:
@@ -67,6 +67,27 @@ class Round:
             validActions.remove(Action.LOW_BET)
             validActions.remove(Action.MID_BET)
             validActions.remove(Action.HIGH_BET)
+        # OP_MAX action handling
+        opponentIdx = (activePlayerIndex + 1) % self.players.__len__()
+        if self.players[int(opponentIdx)].chips == 0:
+            # Opponent is already all in
+            validActions.remove(Action.OP_MAX)
+            validActions.remove(Action.MIN_BET)
+            validActions.remove(Action.MID_BET)
+            validActions.remove(Action.HIGH_BET)
+        if self.players[int(opponentIdx)].chips + incomingBet >= self.players[int(activePlayerIndex)].chips:
+            # Not enough chips to overbet other player
+            validActions.remove(Action.OP_MAX)
+        else:
+            # These actions would now overbet the opponent max
+            validActions.remove(Action.ALL_IN)
+            opponentMax = self.players[int(opponentIdx)].chips
+            if incomingBet + self.players[activePlayerIndex].chips * 0.1 > opponentMax:
+                validActions.remove(Action.LOW_BET)
+            if incomingBet + self.players[activePlayerIndex].chips * 0.4 > opponentMax:
+                validActions.remove(Action.MID_BET)
+            if incomingBet + self.players[activePlayerIndex].chips * 0.7 > opponentMax:
+                validActions.remove(Action.HIGH_BET)
         
         return validActions
 
@@ -151,6 +172,40 @@ class Round:
             # for i in range(self.board.playersPassing.__len__()):
             #     self.board.playersPassing[i] = False
 
+        self.board.playersAllIn[activePlayerIndex] = True
+
+    # handle functionality when active player bets opponent max
+    def handleOpMax(self,activePlayerIndex,incomingBet):
+        # Calculate player bet
+        opponentMax = self.players[int((activePlayerIndex + 1) % self.players.__len__())].chips
+        playerBet = incomingBet + opponentMax
+
+        # Update the stored player bet thus far
+        self.board.playerBets[activePlayerIndex] += playerBet
+
+        # Player is passing
+        self.board.playersPassing[activePlayerIndex] = True
+        # Other players must respond to the bet
+        for i in range(self.board.playersPassing.__len__()):
+            if i != activePlayerIndex:
+                self.board.playersPassing[i] = False
+
+        # Update the current bet
+        if self.board.playerBets[activePlayerIndex] > self.board.currentBet:
+            self.board.currentBet = self.board.playerBets[activePlayerIndex]
+
+        # Update the pot
+        self.board.pot += self.players[activePlayerIndex].bet(playerBet)
+
+        # Disable checking if enabled
+        if self.checkFlag:
+            self.checkFlag = False
+            self.board.checkFlag = False
+            # Not needed after the Phase Change Logic Fix
+            # for i in range(self.board.playersPassing.__len__()):
+            #     self.board.playersPassing[i] = False
+
+        # While not technically "all in", in a two player game, this is sufficient tracking
         self.board.playersAllIn[activePlayerIndex] = True
 
     # handle functionality when active player calls
@@ -584,6 +639,8 @@ class Round:
                     self.handleBet(action,self.board.activePlayerIndex,incomingBet)
                 elif action == Action.ALL_IN:
                     self.handleAllIn(self.board.activePlayerIndex)
+                elif action == Action.OP_MAX:
+                    self.handleOpMax(self.board.activePlayerIndex,incomingBet)
                 elif action == Action.CALL:
                     self.handleCall(self.board.activePlayerIndex,incomingBet)
                 elif action == Action.CHECK:

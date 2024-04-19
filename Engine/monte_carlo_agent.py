@@ -5,6 +5,7 @@ from deck import Deck
 # Get the Board from Round with Round.Board(<constructor arguments>)
 from round import Round
 import copy
+from random import randrange
 
 class MonteCarloAgent(Agent):
 
@@ -22,7 +23,7 @@ class MonteCarloAgent(Agent):
                     if str(card) == str(card_in_hand):
                         deck.cards.remove(card)
                         break
-            print(len(deck.cards))
+            # print(len(deck.cards))
             opponent_hand = [deck.top(), deck.top()] + community_cards
             hand = cards_in_hand + community_cards
             randomized_community_cards = []
@@ -75,9 +76,23 @@ class MonteCarloAgent(Agent):
             pass
 
         # Create child node for the selected leaf node based on valid game actions
-        #   Choose the action to expand a node for at random, lmao
+        #   Choose the action to expand a node for at random
         def EXPAND(self, leaf):
-            # TODO
+            if leaf.availableActions.__len__() == 0:
+                print("SOMETHING WENT WRONG!")
+                return
+            randomActionIdx = randrange(leaf.availableActions.__len__())
+            randomAction = leaf.availableActions[randomActionIdx]
+            newBoard = copy.deepcopy(leaf.board)
+            # TODO: Perform the action on newBoard!!!
+            # NOTE: This can likely be done by copying some methods from round, making them static, and then using them.
+            #       These new static methods should be made in such a way that they can be used in the simulations too!
+
+            newChild = MonteCarloAgent.MCNode(newBoard, leaf, not leaf.isAgent, leaf.availableActions.pop(randomActionIdx))
+
+            leaf.children.append(newChild)
+            
+
             pass
 
         # Run a simulation on the given node
@@ -88,10 +103,46 @@ class MonteCarloAgent(Agent):
             pass
 
         # Update the child win/loss/tie stats with the result,
-        # and propagate the result to all ancestors of the child (accounting for player change)
-        def BACK_PROPAGATE(self, result, child):
-            # TODO
+        # and propagate the result to all ancestors of the child(simNode) (accounting for player change)
+        def BACK_PROPAGATE(self, result, simNode):
+            # TODO: Make the result propagate as well, storing amount of money won/lost
+            # NOTE: The above TODO relies on functionality in the MCNode class that does not yet exist
+
+            if result > 0:
+                simNode.wins += 1
+            elif result < 0:
+                simNode.losses += 1
+            else:
+                simNode.ties += 1
+
+            if simNode.parent is not None:
+                self.BACK_PROPAGATE(simNode.parent)
             pass
+
+        # This is a Static version of a function from round.py
+        # Function will determine all the valid actions for the active player
+        def getValidPlayerActions(self, board):
+            # Copy all the player actions
+            validActions = [member for _, member in Action.__members__.items()]
+            # print("player index",board.activePlayerIndex)
+            incomingBet = board.currentBet - board.playerBets[board.activePlayerIndex]
+            if board.checkFlag and incomingBet == 0:
+                # CANNOT CALL -> phase bet is 0
+                validActions.remove(Action.CALL)
+            elif incomingBet > board.players[int(board.activePlayerIndex)].chips:
+                # CANNOT CALL -> Not enough chips
+                validActions.remove(Action.CALL)
+            if (not board.checkFlag) or incomingBet != 0:
+                # CANNOT CHECK -> You must call, raise, or fold
+                validActions.remove(Action.CHECK)
+            if incomingBet + board.minBet > board.players[int(board.activePlayerIndex)].chips:
+                # Not enough chips
+                validActions.remove(Action.MIN_BET)
+                validActions.remove(Action.LOW_BET)
+                validActions.remove(Action.MID_BET)
+                validActions.remove(Action.HIGH_BET)
+            
+            return validActions
 
     class MCNode:
 
@@ -106,6 +157,7 @@ class MonteCarloAgent(Agent):
             # Will contain MCNode objects
             self.children = []
 
+            # NOTE: currently not tracking money won/lost, will add later
             # Win loss ratio info (tie handling undecided)
             self.wins = 0
             self.losses = 0
@@ -121,10 +173,11 @@ class MonteCarloAgent(Agent):
             # Possible actions the other player can take from this spot
             ## THAT HAVE NOT YET BEEN EXPANDED
             self.availableActions = []
-            # TODO: NFNFNF DETERMINE BASED OFF OF BOARD STATE
-            # Can use function from round to do this
+            # DETERMINE BASED OFF OF BOARD STATE
+            # Can use a copy of function from round to do this
+            self.availableActions = MonteCarloAgent.MCTree.getValidPlayerActions(self.board)
 
-    
+        
     
 
     def MONTE_CARLO_TREE_SEARCH():

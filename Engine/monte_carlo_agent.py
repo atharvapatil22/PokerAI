@@ -23,7 +23,7 @@ class MonteCarloAgent(Agent):
                         deck.cards.remove(card)
                         break
             print(len(deck.cards))
-            opponent_hand = [deck.top(), deck.top()]
+            opponent_hand = [deck.top(), deck.top()] + community_cards
             hand = cards_in_hand + community_cards
             randomized_community_cards = []
             for _ in range(5-len(community_cards)):
@@ -45,7 +45,7 @@ class MonteCarloAgent(Agent):
             if(Action.MID_BET in validActions):
                 return Action.MID_BET
             elif(Action.HIGH_BET in validActions):
-                return Action.LOW_BET
+                return Action.HIGH_BET
             else:
                 return Action.ALL_IN
         elif(your_win_percentage > 0.4):

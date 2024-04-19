@@ -2,6 +2,9 @@ from player import Player
 from player import Action
 from agent import Agent
 from deck import Deck
+# Get the Board from Round with Round.Board(<constructor arguments>)
+from round import Round
+import copy
 
 class MonteCarloAgent(Agent):
 
@@ -51,4 +54,83 @@ class MonteCarloAgent(Agent):
             return Action.CALL
         else:
             return Action.FOLD
+        
     
+    
+    class MCTree:
+
+        def __init__(self, boardState):
+
+            self.root = MonteCarloAgent.MCNode(boardState, None, False, None)
+            #NFNF
+
+        # Use UCB1 Algorithm to select a leaf node from the tree to expand
+        #   Go layer by layer, choose a node from the layer with the highest UCB1 Score
+        #   If that node has any remaing actions in availableActions, select that node!
+        #   Otherwise, the children of the chosen node become the next "layer".
+        #   Repeat until you have a selected node :)
+        def SELECT(self):
+            # TODO
+            # Certified recursion classic
+            pass
+
+        # Create child node for the selected leaf node based on valid game actions
+        #   Choose the action to expand a node for at random, lmao
+        def EXPAND(self, leaf):
+            # TODO
+            pass
+
+        # Run a simulation on the given node
+        #   This is where a deck sequence is generated based off of what we know (board variable of node)
+        #   Return [amount], where amount is the amount won in the round. (positive is win) (0 is tie (two player game)) (negative is loss)
+        def SIMULATE(self, node):
+            # TODO
+            pass
+
+        # Update the child win/loss/tie stats with the result,
+        # and propagate the result to all ancestors of the child (accounting for player change)
+        def BACK_PROPAGATE(self, result, child):
+            # TODO
+            pass
+
+    class MCNode:
+
+        def __init__(self, board, parent, isAgent, playerAction):
+
+            # Will be a Board object
+            self.board = board
+
+            # parent will be a MCNode object
+            self.parent = parent
+
+            # Will contain MCNode objects
+            self.children = []
+
+            # Win loss ratio info (tie handling undecided)
+            self.wins = 0
+            self.losses = 0
+            self.ties = 0
+
+            # Record the player making the choice
+            # Is it the agent or the opponent?
+            self.isAgent = isAgent
+
+            # Record the action taken by the player to reach this node
+            self.playerAction = playerAction
+
+            # Possible actions the other player can take from this spot
+            ## THAT HAVE NOT YET BEEN EXPANDED
+            self.availableActions = []
+            # TODO: NFNFNF DETERMINE BASED OFF OF BOARD STATE
+            # Can use function from round to do this
+
+    
+    
+
+    def MONTE_CARLO_TREE_SEARCH():
+        # TODO: follow pseudocode
+        pass
+
+
+
+

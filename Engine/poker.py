@@ -4,6 +4,7 @@ from player import Player
 from deck import Deck
 from round import Round
 from call_agent import CallAgent
+from monte_carlo_agent import MonteCarloAgent
 
 # general idea, poker will have rounds that take players array as parameters and return players array 
 # play will continue until self.players array has size 1
@@ -18,6 +19,8 @@ class Poker:
 
     def __init__(self, players, startChips, minBet, shuffleFlag=True, deckSequences=None, supressOutput=False) -> None:
         self.players = []
+#         self.players.append(RealPlayer(1, startChips))
+#         self.players.append(MonteCarloAgent(2, startChips))
         for i in range(players.__len__()):
             players[i].chips = startChips
             players[i].nextGame()

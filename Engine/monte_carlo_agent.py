@@ -14,11 +14,14 @@ class MonteCarloAgent(Agent):
         simulations = 1000
         for _ in range(simulations):
             deck = Deck(True, None)
-            for card in cards_in_hand:
-                deck.cards.remove(card)
+            for card_in_hand in cards_in_hand:
+                for card in deck.cards:
+                    if str(card) == str(card_in_hand):
+                        deck.cards.remove(card)
+                        break
+            print(len(deck.cards))
             opponent_hand = [deck.top(), deck.top()]
             hand = cards_in_hand + community_cards
-            opponent_hand = opponent_hand + community_cards
             randomized_community_cards = []
             for _ in range(5-len(community_cards)):
                 randomized_community_cards.append(deck.top())

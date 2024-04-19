@@ -14,6 +14,17 @@ class Round:
             self.currentBet = 0
             self.activePlayerIndex = 0
             self.minBet = minBet
+
+            # NOTE: This extra state here is used to give the agents access to player chip balances
+            #       This is risky, as it relies on consisent shallow copies to maintain data integrity,
+            #       but in theory it should give us the info we need
+            self.players = players
+
+            # NOTE: This extra state here could have redundancy removed by forcing round methods to rely on it
+            #       Instead of the existing round state.
+            # Extra state redundant to round, included here so that agents can see it
+            self.phase = 1
+            self.checkFlag = True
             
             # Setup state arraylists
             for i in range(players.__len__()):
@@ -24,10 +35,10 @@ class Round:
             self.currentBet = minBet
 
 
-    def __init__(self, players, deck, minibet, buttonPlayerIndex = 0):
+    def __init__(self, players, deck, minBet, buttonPlayerIndex = 0):
         self.players = players
         self.deck = deck
-        self.minBet = minibet
+        self.minBet = minBet
         self.buttonPlayerIndex = buttonPlayerIndex
         self.board = self.Board(players,self.minBet)
         self.checkFlag = True
@@ -89,6 +100,7 @@ class Round:
         # Disable checking if enabled
         if self.checkFlag:
             self.checkFlag = False
+            self.board.checkFlag = False
             # Not needed after the Phase Change Logic Fix
             # for i in range(self.board.playersPassing.__len__()):
             #     self.board.playersPassing[i] = False
@@ -128,6 +140,7 @@ class Round:
         # Disable checking if enabled
         if self.checkFlag:
             self.checkFlag = False
+            self.board.checkFlag = False
             # Not needed after the Phase Change Logic Fix
             # for i in range(self.board.playersPassing.__len__()):
             #     self.board.playersPassing[i] = False
@@ -490,12 +503,14 @@ class Round:
         # Start in phase 1
         phase = 1
         while phase < 5:
+        # while self.board.phase < 5:
             # Checking is enabled at the start of each phase
             # Exception, you cannot check unless the incoming bet is 0,
             # meaning that only the big-blind can check in the pre-flop
 
             # allow for checking at the beginning of each phase
             self.checkFlag = True
+            self.board.checkFlag = True
     
 
             for i in range(self.players.__len__()):
@@ -503,6 +518,7 @@ class Round:
                     self.board.playersPassing[i] = False
             # Handle the small blind going first in every phase after the first
             if not phase == 1:
+            # if not self.board.phase == 1:
                 if self.players.__len__() > 2:
                     self.board.activePlayerIndex = self.buttonPlayerIndex + 1
                 else:
@@ -603,15 +619,18 @@ class Round:
             # Handle phase change
             # Phase 1-->2 Preflop --> Flop
             if phase == 1:
+            # if self.board.phase == 1:
                 self.board.community.append(self.deck.top())
                 self.board.community.append(self.deck.top())
                 self.board.community.append(self.deck.top())
             # Phase 2-->3 Flop --> Turn
             # Phase 3-->4 Turn --> River
             elif phase == 2 or phase == 3:
+            # elif self.board.phase == 2 or self.board.phase == 3:
                 self.board.community.append(self.deck.top())
             # Phase 4-->5 River --> Scores
             elif phase == 4:
+            # elif self.board.phase == 4:
                 print("Time for the results!")
             # This should never occur, the prints are for debuggging in case it does
             else:
@@ -631,6 +650,8 @@ class Round:
             
             # Change phase
             phase += 1
+            # Update the board phase so that players/agents can see it
+            self.board.phase += 1
 
         # Check the score of each player's hand
         scores = []

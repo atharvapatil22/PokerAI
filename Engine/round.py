@@ -509,7 +509,8 @@ class Round:
         else:
             score = 100 + HIGH_CARD
 
-        # Ties will be broken by whichever player has the higher cards in hand
+        # OUTDATED::::Ties will be broken by whichever player has the higher cards in hand
+        # NOTE: Ties will result in split pot now
         return score
 
         
@@ -770,45 +771,49 @@ class Round:
                 for i in winningIndex:
                     print(f"Player {self.players[i].id}")
             
-            # Identify tie-break scores
-            tieScores = []
-            for i in range(self.players.__len__()):
-                # If not a winner, no tiebreak score
-                if i not in winningIndex:
-                    tieScores.append(0)
-                # If a winner, calculate tie-break score
-                else:
-                    temp = self.players[i].cardsInHand
-                    temp.sort(key=lambda x: x.value, reverse = True)
-                    # tie-break score = high card value * 10 + low card value
-                    tieScores.append(temp[0].value * 10 + temp[1].value)
+            # NOTE: The commented code from here until the other note is the tie-breaker functionality.
+            #       It is not being used due to ties resulting in split pots being normal poker rules.
+            # # Identify tie-break scores
+            # tieScores = []
+            # for i in range(self.players.__len__()):
+            #     # If not a winner, no tiebreak score
+            #     if i not in winningIndex:
+            #         tieScores.append(0)
+            #     # If a winner, calculate tie-break score
+            #     else:
+            #         temp = self.players[i].cardsInHand
+            #         temp.sort(key=lambda x: x.value, reverse = True)
+            #         # tie-break score = high card value * 10 + low card value
+            #         tieScores.append(temp[0].value * 10 + temp[1].value)
             
-            # Display information about tie-breaker hands
-            if not self.supressOuptut:
-                print("Tie Breaker Hands:")
-                for i in winningIndex:
-                    print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
+            # # Display information about tie-breaker hands
+            # if not self.supressOuptut:
+            #     print("Tie Breaker Hands:")
+            #     for i in winningIndex:
+            #         print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
 
-            # Find winners
-            tiebreaker = -1
-            tieWinningIndex = []
-            for i in winningIndex:
-                if tieScores[i] > tiebreaker:
-                    tiebreaker = tieScores[i]
-                    tieWinningIndex = [i]
-                # There can be multiple Players with equal strength hands
-                elif tieScores[i] == tiebreaker:
-                    tieWinningIndex.append(i)
+            # # Find winners
+            # tiebreaker = -1
+            # tieWinningIndex = []
+            # for i in winningIndex:
+            #     if tieScores[i] > tiebreaker:
+            #         tiebreaker = tieScores[i]
+            #         tieWinningIndex = [i]
+            #     # There can be multiple Players with equal strength hands
+            #     elif tieScores[i] == tiebreaker:
+            #         tieWinningIndex.append(i)
 
-            # Display information about who won the tie-break
-            winningIndex = tieWinningIndex
-            if not self.supressOuptut:
-                if winningIndex.__len__() == 1:
-                    print(f"The tiebreak winner is: Player {winningIndex[0] + 1}")
-                else:
-                    print(f"The tiebreak winners are:")
-                    for i in winningIndex:
-                        print(f"Player {self.players[i].id}")
+            # # Display information about who won the tie-break
+            # winningIndex = tieWinningIndex
+            # if not self.supressOuptut:
+            #     if winningIndex.__len__() == 1:
+            #         print(f"The tiebreak winner is: Player {winningIndex[0] + 1}")
+            #     else:
+            #         print(f"The tiebreak winners are:")
+            #         for i in winningIndex:
+            #             print(f"Player {self.players[i].id}")
+            # NOTE: End of tie-break functionality
+            
         else: 
             # Display information about who won the pot
             if not self.supressOuptut:

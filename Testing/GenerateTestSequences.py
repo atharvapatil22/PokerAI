@@ -3,7 +3,7 @@ import random
 games = sys.argv[1]
 sequences_per_game = sys.argv[2]
 
-values = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
+values = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
 suits = ["Sp", "Cl", "Di", "He"]
 cards = [value + " " + suit for value in values for suit in suits]
 

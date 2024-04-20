@@ -66,12 +66,19 @@ class MinimaxAgent(Agent):
             
     return new_game_state
   
+  def is_terminal_state(self,game_state):
+    if len(game_state['players']) == 1: return True
+    for p in game_state['players']:
+        if p['acted']==False or (p['cur_bet'] != game_state['top_bet'] and p['chips_remaining']>0):
+            return False
+    return True
+
   def minimax_search(self,game_state):
     v,action = self.max_value(game_state,0)
     return action
   
   def max_value(self,game_state,level):
-    if is_terminal_state(game_state):
+    if self.is_terminal_state(game_state):
         print("is terminal")
         return random.randint(0,100), None
     
@@ -91,7 +98,7 @@ class MinimaxAgent(Agent):
     return v,action
   
   def min_value(self,game_state,level):
-    if is_terminal_state(game_state):
+    if self.is_terminal_state(game_state):
         print("is terminal")
         return random.randint(0,100), None
     v = float('inf')

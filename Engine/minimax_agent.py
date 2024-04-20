@@ -7,73 +7,76 @@ from player import Action,BetRatio
 class MinimaxAgent(Agent):
 
   # ~~refactor : Similar function is required in round and maybe some other places. This should be refactored to be DRY
-  def pos_actions_for_this_player(self,game_state,p_index):
-    player_dets = game_state['players'][p_index]
-    valid_actions = [Action.FOLD, Action.CALL, Action.CHECK, Action.ALL_IN, Action.LOW_BET, Action.MID_BET, Action.HIGH_BET]
+  # def: Function will return possible actions for a player at this game_state
+  def possiblePlayerActions(self,game_state,p_index):
+    playerData = game_state['players'][p_index]
+    validActions = [Action.FOLD, Action.CALL, Action.CHECK, Action.ALL_IN, Action.LOW_BET, Action.MID_BET, Action.HIGH_BET]
     
-    incoming_bet = game_state['currentBet'] - player_dets['bet']
+    incomingBet = game_state['currentBet'] - playerData['bet']
     
-    if incoming_bet == 0:
-        valid_actions.remove(Action.CALL) 
-    if incoming_bet > player_dets['chipsRemaining']:
-        if Action.CALL in valid_actions: valid_actions.remove(Action.CALL) 
-        valid_actions.remove(Action.LOW_BET)
-        valid_actions.remove(Action.MID_BET)
-        valid_actions.remove(Action.HIGH_BET)
-    if incoming_bet != 0:
-        valid_actions.remove(Action.CHECK)
-    if incoming_bet > (player_dets['chipsRemaining'] * BetRatio.LOW_BET):
-        if Action.LOW_BET in valid_actions: valid_actions.remove(Action.LOW_BET)
-    if incoming_bet > (player_dets['chipsRemaining'] * BetRatio.MID_BET):
-        if Action.MID_BET in valid_actions: valid_actions.remove(Action.MID_BET)
-    if incoming_bet > (player_dets['chipsRemaining'] * BetRatio.HIGH_BET):
-        if Action.HIGH_BET in valid_actions: valid_actions.remove(Action.HIGH_BET)
-    return valid_actions
+    if incomingBet == 0:
+        validActions.remove(Action.CALL) 
+    if incomingBet > playerData['chipsRemaining']:
+        if Action.CALL in validActions: validActions.remove(Action.CALL) 
+        validActions.remove(Action.LOW_BET)
+        validActions.remove(Action.MID_BET)
+        validActions.remove(Action.HIGH_BET)
+    if incomingBet != 0:
+        validActions.remove(Action.CHECK)
+    if incomingBet > (playerData['chipsRemaining'] * BetRatio.LOW_BET):
+        if Action.LOW_BET in validActions: validActions.remove(Action.LOW_BET)
+    if incomingBet > (playerData['chipsRemaining'] * BetRatio.MID_BET):
+        if Action.MID_BET in validActions: validActions.remove(Action.MID_BET)
+    if incomingBet > (playerData['chipsRemaining'] * BetRatio.HIGH_BET):
+        if Action.HIGH_BET in validActions: validActions.remove(Action.HIGH_BET)
+    return validActions
 
   # ~~refactor : Similar logic is used in round Class. This should be refactored to be DRY
-  def game_state_after_action(self,game_state,action,p_index):
+  # def: Takes in game_state and player action, and returns updated game state (without modifying the current gs)
+  def getUpdatedGameState(self,game_state,action,p_index):
     new_game_state = copy.deepcopy(game_state)
-    player_dets = new_game_state['players'][p_index]
-    incoming_bet = new_game_state['currentBet'] - player_dets['bet']
+    playerData = new_game_state['players'][p_index]
+    incomingBet = new_game_state['currentBet'] - playerData['bet']
     
-    player_dets['acted'] = True
+    playerData['acted'] = True
     if action == Action.FOLD:
         new_game_state['players'].pop(p_index)
     elif action == Action.CALL:
-        player_dets['bet'] += incoming_bet
-        player_dets['chipsRemaining'] -= incoming_bet
-        new_game_state['pot'] += incoming_bet
+        playerData['bet'] += incomingBet
+        playerData['chipsRemaining'] -= incomingBet
+        new_game_state['pot'] += incomingBet
     elif action == Action.ALL_IN:
-        player_dets['bet'] += player_dets['chipsRemaining']
-        new_game_state['pot'] += player_dets['chipsRemaining']
-        if player_dets['chipsRemaining'] > incoming_bet:
-            new_game_state['currentBet'] = player_dets['bet']
-        player_dets['chipsRemaining'] = 0 
+        playerData['bet'] += playerData['chipsRemaining']
+        new_game_state['pot'] += playerData['chipsRemaining']
+        if playerData['chipsRemaining'] > incomingBet:
+            new_game_state['currentBet'] = playerData['bet']
+        playerData['chipsRemaining'] = 0 
     elif action == Action.LOW_BET:
-        player_dets['bet'] += (player_dets['chipsRemaining'] * BetRatio.LOW_BET)
-        new_game_state['pot'] += (player_dets['chipsRemaining'] * BetRatio.LOW_BET)
-        if (player_dets['chipsRemaining'] * BetRatio.LOW_BET) > incoming_bet:
-            new_game_state['currentBet'] = player_dets['bet']
-        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * BetRatio.LOW_BET)
+        playerData['bet'] += (playerData['chipsRemaining'] * BetRatio.LOW_BET)
+        new_game_state['pot'] += (playerData['chipsRemaining'] * BetRatio.LOW_BET)
+        if (playerData['chipsRemaining'] * BetRatio.LOW_BET) > incomingBet:
+            new_game_state['currentBet'] = playerData['bet']
+        playerData['chipsRemaining'] -= (playerData['chipsRemaining'] * BetRatio.LOW_BET)
     elif action == Action.MID_BET:
-        player_dets['bet'] += (player_dets['chipsRemaining'] * BetRatio.MID_BET)
-        new_game_state['pot'] += (player_dets['chipsRemaining'] * BetRatio.MID_BET)
-        if (player_dets['chipsRemaining'] * BetRatio.MID_BET) > incoming_bet:
-            new_game_state['currentBet'] = player_dets['bet']
-        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * BetRatio.MID_BET)
+        playerData['bet'] += (playerData['chipsRemaining'] * BetRatio.MID_BET)
+        new_game_state['pot'] += (playerData['chipsRemaining'] * BetRatio.MID_BET)
+        if (playerData['chipsRemaining'] * BetRatio.MID_BET) > incomingBet:
+            new_game_state['currentBet'] = playerData['bet']
+        playerData['chipsRemaining'] -= (playerData['chipsRemaining'] * BetRatio.MID_BET)
     elif action == Action.HIGH_BET:
-        player_dets['bet'] += (player_dets['chipsRemaining'] * BetRatio.HIGH_BET)
-        new_game_state['pot'] += (player_dets['chipsRemaining'] * BetRatio.HIGH_BET)
-        if (player_dets['chipsRemaining'] * BetRatio.HIGH_BET) > incoming_bet:
-            new_game_state['currentBet'] = player_dets['bet']
-        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * BetRatio.HIGH_BET)
+        playerData['bet'] += (playerData['chipsRemaining'] * BetRatio.HIGH_BET)
+        new_game_state['pot'] += (playerData['chipsRemaining'] * BetRatio.HIGH_BET)
+        if (playerData['chipsRemaining'] * BetRatio.HIGH_BET) > incomingBet:
+            new_game_state['currentBet'] = playerData['bet']
+        playerData['chipsRemaining'] -= (playerData['chipsRemaining'] * BetRatio.HIGH_BET)
             
     return new_game_state
   
-  def is_terminal_state(self,game_state):
+  # Checks if a betting-round/phase is over based on game_state
+  def isPhaseOver(self,game_state):
     if len(game_state['players']) == 1: return True
-    for p in game_state['players']:
-        if p['acted']==False or (p['bet'] != game_state['currentBet'] and p['chipsRemaining']>0):
+    for player in game_state['players']:
+        if player['acted']==False or (player['bet'] != game_state['currentBet'] and player['chipsRemaining']>0):
             return False
     return True
 
@@ -82,37 +85,41 @@ class MinimaxAgent(Agent):
     return action
   
   def max_value(self,game_state,level):
-    if self.is_terminal_state(game_state):
-        print("is terminal")
+    # If game-state marks the end of phase, return utility value
+    if self.isPhaseOver(game_state):
         return random.randint(0,100), None
     
     v = float('-inf')
     action = None
     
-    # possible actions 
-    pos_actz = self.pos_actions_for_this_player(game_state,0)
-    print("poz act",pos_actz)
-    for ac in pos_actz:
+    # possible actions for maximizing player 
+    possibleActions = self.possiblePlayerActions(game_state,0)
+    print("poz act",possibleActions)
+    for ac in possibleActions:
         print("\nlevel",level)
         print("Player #0",ac)
-        new_gs = self.game_state_after_action(game_state,ac,0)
+        new_gs = self.getUpdatedGameState(game_state,ac,0)
         v2,a2 = self.min_value(new_gs,level+1)
         if v2>v:
             v,action = v2, a2
     return v,action
   
   def min_value(self,game_state,level):
-    if self.is_terminal_state(game_state):
+    # If game-state marks the end of phase, return utility value
+    if self.isPhaseOver(game_state):
         print("is terminal")
         return random.randint(0,100), None
+    
     v = float('inf')
     action = None
-    pos_actz = self.pos_actions_for_this_player(game_state,1)
-    print("poz act",pos_actz)
-    for ac in pos_actz:
+
+    # possible actions for minimizing player
+    possibleActions = self.possiblePlayerActions(game_state,1)
+    print("poz act",possibleActions)
+    for ac in possibleActions:
         print("\nlevel",level)
         print("Player #1",ac)
-        new_gs = self.game_state_after_action(game_state,ac,1)
+        new_gs = self.getUpdatedGameState(game_state,ac,1)
         v2,a2 = self.max_value(new_gs,level+1)
         if v2 < v:
             v = v2

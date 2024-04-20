@@ -19,8 +19,8 @@ class Poker:
 
     def __init__(self, players, startChips, minBet, shuffleFlag=True, deckSequences=None, supressOutput=False) -> None:
         self.players = []
-#         self.players.append(RealPlayer(1, startChips))
-#         self.players.append(MonteCarloAgent(2, startChips))
+        # self.players.append(RealPlayer(1, startChips))
+        # self.players.append(MonteCarloAgent(2, startChips))
         for i in range(players.__len__()):
             players[i].chips = startChips
             players[i].nextGame()
@@ -540,5 +540,5 @@ testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet =
 
 # testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, decksequences="../Testing/test_sequencesRound3.txt") #feed 4 decks, 2 for each game example
 
-# testGame.runGame()
+testGame.runGame()
 

@@ -10,6 +10,12 @@ class Action(Enum):
     CALL = "call"
     CHECK = "check"
     FOLD = "fold"
+    OP_MAX = "op_max" # Short for "Opponent_Max"
+
+class BetRatio():
+    LOW_BET = 0.1
+    MID_BET = 0.4
+    HIGH_BET = 0.7
 
 class Player(ABC):
 

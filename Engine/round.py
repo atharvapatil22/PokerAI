@@ -1,6 +1,6 @@
 from realPlayer import RealPlayer
 from deck import Deck
-from realPlayer import Action
+from player import Action, BetRatio
 
 class Round:
     class Board:
@@ -36,7 +36,7 @@ class Round:
 
 
 
-    def __init__(self, players, deck, minibet, buttonPlayerIndex = 0, supressOutput=False):
+    def __init__(self, players, deck, minBet, buttonPlayerIndex = 0, supressOutput=False):
         self.players = players
         self.deck = deck
         self.minBet = minBet
@@ -55,7 +55,7 @@ class Round:
         if self.checkFlag and incomingBet == 0:
             # CANNOT CALL -> phase bet is 0
             validActions.remove(Action.CALL)
-        elif incomingBet > self.players[int(activePlayerIndex)].chips:
+        elif incomingBet >= self.players[int(activePlayerIndex)].chips:
             # CANNOT CALL -> Not enough chips
             validActions.remove(Action.CALL)
         if (not self.checkFlag) or incomingBet != 0:
@@ -67,6 +67,27 @@ class Round:
             validActions.remove(Action.LOW_BET)
             validActions.remove(Action.MID_BET)
             validActions.remove(Action.HIGH_BET)
+        # OP_MAX action handling
+        opponentIdx = (activePlayerIndex + 1) % self.players.__len__()
+        if self.players[int(opponentIdx)].chips == 0:
+            # Opponent is already all in
+            validActions.remove(Action.OP_MAX)
+            validActions.remove(Action.MIN_BET)
+            validActions.remove(Action.MID_BET)
+            validActions.remove(Action.HIGH_BET)
+        if self.players[int(opponentIdx)].chips + incomingBet >= self.players[int(activePlayerIndex)].chips:
+            # Not enough chips to overbet other player
+            validActions.remove(Action.OP_MAX)
+        else:
+            # These actions would now overbet the opponent max
+            validActions.remove(Action.ALL_IN)
+            opponentMax = self.players[int(opponentIdx)].chips
+            if incomingBet + self.players[activePlayerIndex].chips * BetRatio.LOW_BET > opponentMax:
+                validActions.remove(Action.LOW_BET)
+            if incomingBet + self.players[activePlayerIndex].chips * BetRatio.MID_BET > opponentMax:
+                validActions.remove(Action.MID_BET)
+            if incomingBet + self.players[activePlayerIndex].chips * BetRatio.HIGH_BET > opponentMax:
+                validActions.remove(Action.HIGH_BET)
         
         return validActions
 
@@ -76,11 +97,11 @@ class Round:
         if action == Action.MIN_BET:
             playerBet = incomingBet + self.minBet
         elif action == Action.LOW_BET:
-            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.1 if self.players[activePlayerIndex].chips * 0.1 > self.minBet else self.minBet
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * BetRatio.LOW_BET if self.players[activePlayerIndex].chips * BetRatio.LOW_BET > self.minBet else self.minBet
         elif action == Action.MID_BET:
-            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.4 if self.players[activePlayerIndex].chips * 0.4 > self.minBet else self.minBet
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * BetRatio.MID_BET if self.players[activePlayerIndex].chips * BetRatio.MID_BET > self.minBet else self.minBet
         elif action == Action.HIGH_BET:
-            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.7 if self.players[activePlayerIndex].chips * 0.7 > self.minBet else self.minBet
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * BetRatio.HIGH_BET if self.players[activePlayerIndex].chips * BetRatio.HIGH_BET > self.minBet else self.minBet
 
         # Update the stored player bet thus far
         self.board.playerBets[activePlayerIndex] += playerBet
@@ -151,6 +172,40 @@ class Round:
             # for i in range(self.board.playersPassing.__len__()):
             #     self.board.playersPassing[i] = False
 
+        self.board.playersAllIn[activePlayerIndex] = True
+
+    # handle functionality when active player bets opponent max
+    def handleOpMax(self,activePlayerIndex,incomingBet):
+        # Calculate player bet
+        opponentMax = self.players[int((activePlayerIndex + 1) % self.players.__len__())].chips
+        playerBet = incomingBet + opponentMax
+
+        # Update the stored player bet thus far
+        self.board.playerBets[activePlayerIndex] += playerBet
+
+        # Player is passing
+        self.board.playersPassing[activePlayerIndex] = True
+        # Other players must respond to the bet
+        for i in range(self.board.playersPassing.__len__()):
+            if i != activePlayerIndex:
+                self.board.playersPassing[i] = False
+
+        # Update the current bet
+        if self.board.playerBets[activePlayerIndex] > self.board.currentBet:
+            self.board.currentBet = self.board.playerBets[activePlayerIndex]
+
+        # Update the pot
+        self.board.pot += self.players[activePlayerIndex].bet(playerBet)
+
+        # Disable checking if enabled
+        if self.checkFlag:
+            self.checkFlag = False
+            self.board.checkFlag = False
+            # Not needed after the Phase Change Logic Fix
+            # for i in range(self.board.playersPassing.__len__()):
+            #     self.board.playersPassing[i] = False
+
+        # While not technically "all in", in a two player game, this is sufficient tracking
         self.board.playersAllIn[activePlayerIndex] = True
 
     # handle functionality when active player calls
@@ -454,7 +509,8 @@ class Round:
         else:
             score = 100 + HIGH_CARD
 
-        # Ties will be broken by whichever player has the higher cards in hand
+        # OUTDATED::::Ties will be broken by whichever player has the higher cards in hand
+        # NOTE: Ties will result in split pot now
         return score
 
         
@@ -584,6 +640,8 @@ class Round:
                     self.handleBet(action,self.board.activePlayerIndex,incomingBet)
                 elif action == Action.ALL_IN:
                     self.handleAllIn(self.board.activePlayerIndex)
+                elif action == Action.OP_MAX:
+                    self.handleOpMax(self.board.activePlayerIndex,incomingBet)
                 elif action == Action.CALL:
                     self.handleCall(self.board.activePlayerIndex,incomingBet)
                 elif action == Action.CHECK:
@@ -713,45 +771,49 @@ class Round:
                 for i in winningIndex:
                     print(f"Player {self.players[i].id}")
             
-            # Identify tie-break scores
-            tieScores = []
-            for i in range(self.players.__len__()):
-                # If not a winner, no tiebreak score
-                if i not in winningIndex:
-                    tieScores.append(0)
-                # If a winner, calculate tie-break score
-                else:
-                    temp = self.players[i].cardsInHand
-                    temp.sort(key=lambda x: x.value, reverse = True)
-                    # tie-break score = high card value * 10 + low card value
-                    tieScores.append(temp[0].value * 10 + temp[1].value)
+            # NOTE: The commented code from here until the other note is the tie-breaker functionality.
+            #       It is not being used due to ties resulting in split pots being normal poker rules.
+            # # Identify tie-break scores
+            # tieScores = []
+            # for i in range(self.players.__len__()):
+            #     # If not a winner, no tiebreak score
+            #     if i not in winningIndex:
+            #         tieScores.append(0)
+            #     # If a winner, calculate tie-break score
+            #     else:
+            #         temp = self.players[i].cardsInHand
+            #         temp.sort(key=lambda x: x.value, reverse = True)
+            #         # tie-break score = high card value * 10 + low card value
+            #         tieScores.append(temp[0].value * 10 + temp[1].value)
             
-            # Display information about tie-breaker hands
-            if not self.supressOuptut:
-                print("Tie Breaker Hands:")
-                for i in winningIndex:
-                    print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
+            # # Display information about tie-breaker hands
+            # if not self.supressOuptut:
+            #     print("Tie Breaker Hands:")
+            #     for i in winningIndex:
+            #         print(f"Player {self.players[i].id} hand: "+ ", ".join(str(card) for card in self.players[i].cardsInHand))
 
-            # Find winners
-            tiebreaker = -1
-            tieWinningIndex = []
-            for i in winningIndex:
-                if tieScores[i] > tiebreaker:
-                    tiebreaker = tieScores[i]
-                    tieWinningIndex = [i]
-                # There can be multiple Players with equal strength hands
-                elif tieScores[i] == tiebreaker:
-                    tieWinningIndex.append(i)
+            # # Find winners
+            # tiebreaker = -1
+            # tieWinningIndex = []
+            # for i in winningIndex:
+            #     if tieScores[i] > tiebreaker:
+            #         tiebreaker = tieScores[i]
+            #         tieWinningIndex = [i]
+            #     # There can be multiple Players with equal strength hands
+            #     elif tieScores[i] == tiebreaker:
+            #         tieWinningIndex.append(i)
 
-            # Display information about who won the tie-break
-            winningIndex = tieWinningIndex
-            if not self.supressOuptut:
-                if winningIndex.__len__() == 1:
-                    print(f"The tiebreak winner is: Player {winningIndex[0] + 1}")
-                else:
-                    print(f"The tiebreak winners are:")
-                    for i in winningIndex:
-                        print(f"Player {self.players[i].id}")
+            # # Display information about who won the tie-break
+            # winningIndex = tieWinningIndex
+            # if not self.supressOuptut:
+            #     if winningIndex.__len__() == 1:
+            #         print(f"The tiebreak winner is: Player {winningIndex[0] + 1}")
+            #     else:
+            #         print(f"The tiebreak winners are:")
+            #         for i in winningIndex:
+            #             print(f"Player {self.players[i].id}")
+            # NOTE: End of tie-break functionality
+            
         else: 
             # Display information about who won the pot
             if not self.supressOuptut:

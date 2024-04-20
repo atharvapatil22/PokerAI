@@ -1,31 +1,33 @@
 import random
 import copy
 from agent import Agent
+from player import Action,BetRatio
+
 # This agent can only handle 2player poker. It will have to be modified for multiplayer games.
 class MinimaxAgent(Agent):
 
   # ~~refactor : Similar function is required in round and maybe some other places. This should be refactored to be DRY
   def pos_actions_for_this_player(self,game_state,p_index):
     player_dets = game_state['players'][p_index]
-    valid_actions = ['FOLD','CALL','CHECK','ALLIN','LOWBET','MEDBET','HIGHBET']
+    valid_actions = [Action.FOLD, Action.CALL, Action.CHECK, Action.ALL_IN, Action.LOW_BET, Action.MID_BET, Action.HIGH_BET]
     
     incoming_bet = game_state['currentBet'] - player_dets['bet']
     
     if incoming_bet == 0:
-        valid_actions.remove("CALL") 
+        valid_actions.remove(Action.CALL) 
     if incoming_bet > player_dets['chipsRemaining']:
-        if "CALL" in valid_actions: valid_actions.remove("CALL") 
-        valid_actions.remove("LOWBET")
-        valid_actions.remove("MEDBET")
-        valid_actions.remove("HIGHBET")
+        if Action.CALL in valid_actions: valid_actions.remove(Action.CALL) 
+        valid_actions.remove(Action.LOW_BET)
+        valid_actions.remove(Action.MID_BET)
+        valid_actions.remove(Action.HIGH_BET)
     if incoming_bet != 0:
-        valid_actions.remove('CHECK')
-    if incoming_bet > player_dets['chipsRemaining'] * 0.1:
-        if "LOWBET" in valid_actions: valid_actions.remove('LOWBET')
-    if incoming_bet > player_dets['chipsRemaining'] * 0.4:
-        if "MEDBET" in valid_actions: valid_actions.remove('MEDBET')
-    if incoming_bet > player_dets['chipsRemaining'] * 0.7:
-        if "HIGHBET" in valid_actions: valid_actions.remove('HIGHBET')
+        valid_actions.remove(Action.CHECK)
+    if incoming_bet > (player_dets['chipsRemaining'] * BetRatio.LOW_BET):
+        if Action.LOW_BET in valid_actions: valid_actions.remove(Action.LOW_BET)
+    if incoming_bet > (player_dets['chipsRemaining'] * BetRatio.MID_BET):
+        if Action.MID_BET in valid_actions: valid_actions.remove(Action.MID_BET)
+    if incoming_bet > (player_dets['chipsRemaining'] * BetRatio.HIGH_BET):
+        if Action.HIGH_BET in valid_actions: valid_actions.remove(Action.HIGH_BET)
     return valid_actions
 
   # ~~refactor : Similar logic is used in round Class. This should be refactored to be DRY
@@ -35,36 +37,36 @@ class MinimaxAgent(Agent):
     incoming_bet = new_game_state['currentBet'] - player_dets['bet']
     
     player_dets['acted'] = True
-    if action == 'FOLD':
+    if action == Action.FOLD:
         new_game_state['players'].pop(p_index)
-    elif action == 'CALL':
+    elif action == Action.CALL:
         player_dets['bet'] += incoming_bet
         player_dets['chipsRemaining'] -= incoming_bet
         new_game_state['pot'] += incoming_bet
-    elif action == 'ALLIN':
+    elif action == Action.ALL_IN:
         player_dets['bet'] += player_dets['chipsRemaining']
         new_game_state['pot'] += player_dets['chipsRemaining']
         if player_dets['chipsRemaining'] > incoming_bet:
             new_game_state['currentBet'] = player_dets['bet']
         player_dets['chipsRemaining'] = 0 
-    elif action == 'LOWBET':
-        player_dets['bet'] += (player_dets['chipsRemaining'] * 0.1)
-        new_game_state['pot'] += (player_dets['chipsRemaining'] * 0.1)
-        if (player_dets['chipsRemaining'] * 0.1) > incoming_bet:
+    elif action == Action.LOW_BET:
+        player_dets['bet'] += (player_dets['chipsRemaining'] * BetRatio.LOW_BET)
+        new_game_state['pot'] += (player_dets['chipsRemaining'] * BetRatio.LOW_BET)
+        if (player_dets['chipsRemaining'] * BetRatio.LOW_BET) > incoming_bet:
             new_game_state['currentBet'] = player_dets['bet']
-        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * 0.1)
-    elif action == 'MEDBET':
-        player_dets['bet'] += (player_dets['chipsRemaining'] * 0.4)
-        new_game_state['pot'] += (player_dets['chipsRemaining'] * 0.4)
-        if (player_dets['chipsRemaining'] * 0.4) > incoming_bet:
+        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * BetRatio.LOW_BET)
+    elif action == Action.MID_BET:
+        player_dets['bet'] += (player_dets['chipsRemaining'] * BetRatio.MID_BET)
+        new_game_state['pot'] += (player_dets['chipsRemaining'] * BetRatio.MID_BET)
+        if (player_dets['chipsRemaining'] * BetRatio.MID_BET) > incoming_bet:
             new_game_state['currentBet'] = player_dets['bet']
-        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * 0.4)
-    elif action == 'HIGHBET':
-        player_dets['bet'] += (player_dets['chipsRemaining'] * 0.7)
-        new_game_state['pot'] += (player_dets['chipsRemaining'] * 0.7)
-        if (player_dets['chipsRemaining'] * 0.7) > incoming_bet:
+        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * BetRatio.MID_BET)
+    elif action == Action.HIGH_BET:
+        player_dets['bet'] += (player_dets['chipsRemaining'] * BetRatio.HIGH_BET)
+        new_game_state['pot'] += (player_dets['chipsRemaining'] * BetRatio.HIGH_BET)
+        if (player_dets['chipsRemaining'] * BetRatio.HIGH_BET) > incoming_bet:
             new_game_state['currentBet'] = player_dets['bet']
-        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * 0.7)
+        player_dets['chipsRemaining'] -= (player_dets['chipsRemaining'] * BetRatio.HIGH_BET)
             
     return new_game_state
   

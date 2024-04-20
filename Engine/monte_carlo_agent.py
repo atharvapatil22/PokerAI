@@ -6,6 +6,7 @@ from deck import Deck
 from round import Round
 import copy
 from random import randrange
+from math import sqrt, log
 
 class MonteCarloAgent(Agent):
 
@@ -65,15 +66,58 @@ class MonteCarloAgent(Agent):
             self.root = MonteCarloAgent.MCNode(boardState, None, False, None)
             #NFNF
 
+        # Utility of node n
+        #   Current implementation: U(n) = n.wins + 0.5 n.ties
+        def U(n):
+            # TODO: Make this more reflective of actual utility by incorporating chips won
+            #       Perhaps U(n) = net money won?
+            #       Maybe U(n) = sum(Sqrt(|money won per simulation|) * <-1 if lost money, 1 if gained money>)?
+            return n.wins + 0.5*n.ties
+        
+        # Number of playouts through node n
+        #   Current implementation: N(n) = n.wins + n.ties + n.losses
+        def N(n):
+            return n.wins + n.ties + n.losses
+        
+        def UCB1(n):
+            c = sqrt(2)
+            exploitation = MonteCarloAgent.MCTree.U(n) / MonteCarloAgent.MCTree.N(n)
+            # If we are operating on the root node, avoid errors by setting exploration to 0
+            exploration = 0
+            if n.parent is not None:
+                exploration = c * sqrt(log(MonteCarloAgent.MCTree.N(n.parent))/MonteCarloAgent.MCTree.N(n))
+
+            return exploitation + exploration
+
+
+        # Use UCB1 Algorithm to select a leaf node from the tree to expand
+        #   Go layer by layer, choose a node from the layer with the highest UCB1 Score
+        #   If that node has any remaing actions in availableActions, select that node!
+        #   Otherwise, the children of the chosen node become the next "layer".
+        #   Repeat until you have a selected node :)
+        def selectRecursion(self, layer):
+            maxScore = None
+            maxIdx = None
+            for i in range(layer.__len__()):
+                score = MonteCarloAgent.MCTree.UCB1(layer[i])
+                if maxScore is None or score > maxScore:
+                    maxScore = score
+                    maxIdx = i
+            chosen = layer[maxIdx]
+            if chosen.availableActions.__len__() > 0:
+                return chosen
+            else:
+                return MonteCarloAgent.MCTree.selectRecursion(chosen.children)
+
         # Use UCB1 Algorithm to select a leaf node from the tree to expand
         #   Go layer by layer, choose a node from the layer with the highest UCB1 Score
         #   If that node has any remaing actions in availableActions, select that node!
         #   Otherwise, the children of the chosen node become the next "layer".
         #   Repeat until you have a selected node :)
         def SELECT(self):
-            # TODO
             # Certified recursion classic
-            pass
+            layer = [self.root]
+            return MonteCarloAgent.MCTree.selectRecursion(layer)
 
         # Create child node for the selected leaf node based on valid game actions
         #   Choose the action to expand a node for at random
@@ -180,9 +224,27 @@ class MonteCarloAgent(Agent):
         
     
 
-    def MONTE_CARLO_TREE_SEARCH():
+    def MONTE_CARLO_TREE_SEARCH(self, board, numSim):
         # TODO: follow pseudocode
-        pass
+        tree = MonteCarloAgent.MCTree(board)
+        for i in range(numSim):
+            leaf = tree.SELECT()
+            child = tree.EXPAND(leaf)
+            # NOTE: SIMULATE has not been implemented
+            result = tree.SIMULATE(child)
+            tree.BACK_PROPAGATE(result, child)
+
+        maxNumPlayouts = None
+        chosenNode = None
+        for i in range(tree.root.children.__len__()):
+            node = tree.root.children[i]
+            numPlayouts = MonteCarloAgent.MCTree.N(node)
+            if maxNumPlayouts is None or numPlayouts > maxNumPlayouts or (numPlayouts == maxNumPlayouts and MonteCarloAgent.MCTree.U(node) > MonteCarloAgent.MCTree.U(chosenNode)):
+                maxNumPlayouts = numPlayouts
+                chosenNode = node
+        chosenAction = chosenNode.playerAction
+        return chosenAction
+
 
 
 

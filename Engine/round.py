@@ -1,6 +1,6 @@
 from realPlayer import RealPlayer
 from deck import Deck
-from realPlayer import Action
+from player import Action, BetRatio
 
 class Round:
     class Board:
@@ -82,11 +82,11 @@ class Round:
             # These actions would now overbet the opponent max
             validActions.remove(Action.ALL_IN)
             opponentMax = self.players[int(opponentIdx)].chips
-            if incomingBet + self.players[activePlayerIndex].chips * 0.1 > opponentMax:
+            if incomingBet + self.players[activePlayerIndex].chips * BetRatio.LOW_BET > opponentMax:
                 validActions.remove(Action.LOW_BET)
-            if incomingBet + self.players[activePlayerIndex].chips * 0.4 > opponentMax:
+            if incomingBet + self.players[activePlayerIndex].chips * BetRatio.MID_BET > opponentMax:
                 validActions.remove(Action.MID_BET)
-            if incomingBet + self.players[activePlayerIndex].chips * 0.7 > opponentMax:
+            if incomingBet + self.players[activePlayerIndex].chips * BetRatio.HIGH_BET > opponentMax:
                 validActions.remove(Action.HIGH_BET)
         
         return validActions
@@ -97,11 +97,11 @@ class Round:
         if action == Action.MIN_BET:
             playerBet = incomingBet + self.minBet
         elif action == Action.LOW_BET:
-            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.1 if self.players[activePlayerIndex].chips * 0.1 > self.minBet else self.minBet
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * BetRatio.LOW_BET if self.players[activePlayerIndex].chips * BetRatio.LOW_BET > self.minBet else self.minBet
         elif action == Action.MID_BET:
-            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.4 if self.players[activePlayerIndex].chips * 0.4 > self.minBet else self.minBet
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * BetRatio.MID_BET if self.players[activePlayerIndex].chips * BetRatio.MID_BET > self.minBet else self.minBet
         elif action == Action.HIGH_BET:
-            playerBet = incomingBet + self.players[activePlayerIndex].chips * 0.7 if self.players[activePlayerIndex].chips * 0.7 > self.minBet else self.minBet
+            playerBet = incomingBet + self.players[activePlayerIndex].chips * BetRatio.HIGH_BET if self.players[activePlayerIndex].chips * BetRatio.HIGH_BET > self.minBet else self.minBet
 
         # Update the stored player bet thus far
         self.board.playerBets[activePlayerIndex] += playerBet

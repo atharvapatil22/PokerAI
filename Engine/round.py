@@ -4,7 +4,7 @@ from player import Action, BetRatio
 
 class Round:
     class Board:
-        def __init__(self,players,minBet):
+        def __init__(self,players,minBet,buttonPlayerIndex):
             self.pot = 0
             self.community = []
             self.playersPassing = []
@@ -19,6 +19,9 @@ class Round:
             #       This is risky, as it relies on consisent shallow copies to maintain data integrity,
             #       but in theory it should give us the info we need
             self.players = players
+            # NOTE: This extra state here is used to give the agents access to button position
+            #       It's used to allow the agents to know how to pass the button on simulation
+            self.buttonPlayerIndex = buttonPlayerIndex
 
             # NOTE: This extra state here could have redundancy removed by forcing round methods to rely on it
             #       Instead of the existing round state.
@@ -41,7 +44,7 @@ class Round:
         self.deck = deck
         self.minBet = minBet
         self.buttonPlayerIndex = buttonPlayerIndex
-        self.board = self.Board(players,self.minBet)
+        self.board = self.Board(players,self.minBet,buttonPlayerIndex)
         self.checkFlag = True
         self.supressOuptut = supressOutput
 

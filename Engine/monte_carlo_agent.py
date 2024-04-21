@@ -350,6 +350,54 @@ class MonteCarloAgent(Agent):
         #   This is where a deck sequence is generated based off of what we know (board variable of node)
         #   Return [amount], where amount is the amount won in the round. (positive is win) (0 is tie (two player game)) (negative is loss)
         def SIMULATE(self, node):
+            simulatedNode = copy.deepcopy(node)
+
+            community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
+
+            simPhaseDiff = simulatedNode.board.phase - self.root.board.phase #see if board is not in same phase as real game
+
+            if simPhaseDiff > 0: #if simulation is not synced, fill in community cards
+                randDeck = Deck(True, None)
+                for card_in_hand in simulatedNode.board.players[simulatedNode.board.activePlayerIndex].cardsInHand:
+                    for card in randDeck.cards:
+                        if str(card) == str(card_in_hand):
+                            randDeck.cards.remove(card)
+                            break
+                if simulatedNode.board.phase == 1:
+                    for i in range(3):
+                        community.append(randDeck.top())
+                else:
+                    community.append(randDeck.top())
+
+            if simulatedNode.phase == 5: #if board is in scoring phase, evaluate
+                scores = []
+                for pl in node.board.players:
+                    if pl in node.board.playersFolding:
+                        scores.append(0)
+                    else:
+                        hand = pl.cardsInHand + node.board.community
+                        scores.append(MonteCarloAgent.handScore(hand))
+                
+                playerScore = scores[self.root.board.activePlayerIndex]
+                maxScore = max(scores)
+
+                if playerScore != maxScore:
+                    return -1
+                else:
+                    for p in range(len(scores)):
+                        if p != self.root.board.activePlayerIndex and scores[p] == maxScore:
+                            return 0
+                        else: 
+                            return 1
+            else: 
+                #TODO: implement simple agent
+                pass
+
+
+            
+
+
+
             # TODO
             # NOTE: At the start of each simulation, simulate a new set of unknown cards.
             #       This means that "newly revealed" community cards will not be stored in nodes of "future"

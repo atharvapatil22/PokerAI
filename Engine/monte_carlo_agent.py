@@ -11,6 +11,9 @@ from math import sqrt, log
 class MonteCarloAgent(Agent):
 
     def get_action(self, board, validActions):
+        action = self.MONTE_CARLO_TREE_SEARCH(board, 1000)
+        print(f"Monte Carlo Agent chose: {action}")
+        return action
         cards_in_hand = self.cardsInHand
         community_cards = board.community
         your_wins = 0
@@ -98,12 +101,15 @@ class MonteCarloAgent(Agent):
         def selectRecursion(self, layer):
             maxScore = None
             maxIdx = None
-            for i in range(layer.__len__()):
-                score = MonteCarloAgent.MCTree.UCB1(layer[i])
-                if maxScore is None or score > maxScore:
-                    maxScore = score
-                    maxIdx = i
-            chosen = layer[maxIdx]
+            if layer.__len__() == 1:
+                chosen = layer[0]
+            else:
+                for i in range(layer.__len__()):
+                    score = MonteCarloAgent.MCTree.UCB1(layer[i])
+                    if maxScore is None or score > maxScore:
+                        maxScore = score
+                        maxIdx = i
+                chosen = layer[maxIdx]
             if chosen.availableActions.__len__() > 0:
                 return chosen
             # IN THIS CASE, THERE ARE NO LEGAL MOVES FOR CHOSEN, MEANING GAME IS AT END STATE
@@ -120,13 +126,13 @@ class MonteCarloAgent(Agent):
         def SELECT(self):
             # Certified recursion classic
             layer = [self.root]
-            return MonteCarloAgent.MCTree.selectRecursion(layer)
+            return MonteCarloAgent.MCTree.selectRecursion(self, layer)
         
         ### NOTE: STARTING HERE BEGINS THE "handle<Action>" RECREATION STAGE
 
         # handle functionality when active player places MIN/LOW/MID/HIGH bet 
         # MAKE SURE TO PASS IN A DEEP COPY OF BOARD IF YOU DO NOT WANT TO STAIN BOARD STATE AT PREVIOUS NODE!!!
-        def handleBet(board,action):
+        def handleBet(self, board,action):
             incomingBet = board.currentBet - board.playerBets[board.activePlayerIndex]
             # Calculate player bet
             if action == Action.MIN_BET:
@@ -165,7 +171,7 @@ class MonteCarloAgent(Agent):
             
         # handle functionality when active player goes all in
         # MAKE SURE TO PASS IN A DEEP COPY OF BOARD IF YOU DO NOT WANT TO STAIN BOARD STATE AT PREVIOUS NODE!!!
-        def handleAllIn(board):
+        def handleAllIn(self, board):
             # Calculate player bet
             playerBet = board.players[board.activePlayerIndex].chips
 
@@ -210,7 +216,7 @@ class MonteCarloAgent(Agent):
 
         # handle functionality when active player bets opponent max
         # MAKE SURE TO PASS IN A DEEP COPY OF BOARD IF YOU DO NOT WANT TO STAIN BOARD STATE AT PREVIOUS NODE!!!
-        def handleOpMax(board):
+        def handleOpMax(self, board):
             incomingBet = board.currentBet - board.playerBets[board.activePlayerIndex]
             # Calculate player bet
             opponentMax = board.players[int((board.activePlayerIndex + 1) % board.players.__len__())].chips
@@ -244,7 +250,7 @@ class MonteCarloAgent(Agent):
             board.playersAllIn[board.activePlayerIndex] = True
 
         # handle functionality when active player calls
-        def handleCall(board):
+        def handleCall(self, board):
             incomingBet = board.currentBet - board.playerBets[board.activePlayerIndex]
             # Calculate player bet
             playerBet = incomingBet
@@ -364,15 +370,15 @@ class MonteCarloAgent(Agent):
                             randDeck.cards.remove(card)
                             break
                 if simulatedNode.board.phase == 1:
-                    for i in range(3):
+                    for _ in range(3):
                         community.append(randDeck.top())
                 else:
                     community.append(randDeck.top())
 
-            if simulatedNode.phase == 5: #if board is in scoring phase, evaluate
+            if simulatedNode.board.phase == 5: #if board is in scoring phase, evaluate
                 scores = []
                 for pl in node.board.players:
-                    if pl in node.board.playersFolding:
+                    if pl in node.board.playersFolding: ##how do we know which player score this is for?
                         scores.append(0)
                     else:
                         hand = pl.cardsInHand + node.board.community
@@ -412,7 +418,7 @@ class MonteCarloAgent(Agent):
         def BACK_PROPAGATE(self, result, simNode):
             # TODO: Make the result propagate as well, storing amount of money won/lost
             # NOTE: The above TODO relies on functionality in the MCNode class that does not yet exist
-
+            print("Result: " + str(result))
             if result > 0:
                 simNode.wins += 1
             elif result < 0:
@@ -460,7 +466,7 @@ class MonteCarloAgent(Agent):
                 validActions.remove(Action.HIGH_BET)
             # OP_MAX action handling
             opponentIdx = (board.activePlayerIndex + 1) % board.players.__len__()
-            if self.players[int(opponentIdx)].chips == 0:
+            if board.players[int(opponentIdx)].chips == 0:
                 # Opponent is already all in
                 validActions.remove(Action.OP_MAX)
                 validActions.remove(Action.MIN_BET)
@@ -514,7 +520,8 @@ class MonteCarloAgent(Agent):
             self.availableActions = []
             # DETERMINE BASED OFF OF BOARD STATE
             # Can use a copy of function from round to do this
-            self.availableActions = MonteCarloAgent.MCTree.getValidPlayerActions(self.board)
+            
+            self.availableActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, self.board)
             # # Remove FOLD option, it should not occur in tree????
             # self.availableActions.remove(Action.FOLD)
 

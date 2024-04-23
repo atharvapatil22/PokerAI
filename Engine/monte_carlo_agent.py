@@ -421,7 +421,7 @@ class MonteCarloAgent(Agent):
                 # Get the action
                 # Random Action
                 availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
-                randomActionIdx = randrange(availableSimActions)
+                randomActionIdx = randrange(availableSimActions.__len__())
                 randomAction = availableSimActions[randomActionIdx]
                 # Handle the action
                 # Handle player action
@@ -459,7 +459,7 @@ class MonteCarloAgent(Agent):
                         # allow for checking at the beginning of each phase
                         simulatedBoard.checkFlag = True
                         # participating players are no longer passive
-                        for i in range(self.players.__len__()):
+                        for i in range(simulatedBoard.players.__len__()):
                             if not simulatedBoard.playersFolding[i]:
                                 simulatedBoard.playersPassing[i] = False
                         # handle who goes first after phase change
@@ -803,7 +803,8 @@ class MonteCarloAgent(Agent):
         for i in range(tree.root.children.__len__()):
             node = tree.root.children[i]
             numPlayouts = MonteCarloAgent.MCTree.N(node)
-            print("Node: " + str(node.playerAction) + " Playouts: " + str(numPlayouts) + " U: " + str(MonteCarloAgent.MCTree.U(node)))
+            # numPlayouts = MonteCarloAgent.MCTree.U(node) / MonteCarloAgent.MCTree.N(node)
+            print("Node: " + str(node.playerAction) + " Playouts: " + str(MonteCarloAgent.MCTree.N(node)) + " U: " + str(MonteCarloAgent.MCTree.U(node)))
             if maxNumPlayouts is None or numPlayouts > maxNumPlayouts or (numPlayouts == maxNumPlayouts and MonteCarloAgent.MCTree.U(node) > MonteCarloAgent.MCTree.U(chosenNode)):
                 maxNumPlayouts = numPlayouts
                 chosenNode = node

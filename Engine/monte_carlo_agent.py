@@ -382,16 +382,23 @@ class MonteCarloAgent(Agent):
                 simulatedNode.board.playersAllIn[i] = False
             print("Simulate phase: " + str(simulatedNode.board.phase))
             community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
-
-            simPhaseDiff = simulatedNode.board.phase - self.root.board.phase #see if board is not in same phase as real game
+            #create newly randomized deck
             randDeck = Deck(True, None)
-            if simPhaseDiff > 0: #if simulation is not synced, fill in community cards
-                # print("Simulating phase difference")    
-                for card_in_hand in simulatedNode.board.players[simulatedNode.board.activePlayerIndex].cardsInHand:
+            #remove cards that are in the agent's hand and community
+            removeCards = simulatedNode.board.players[self.root.board.activePlayerIndex].cardsInHand + self.root.board.community
+            #remove cards that are in the agent's hand
+            for card_in_hand in removeCards:
                     for card in randDeck.cards:
                         if str(card) == str(card_in_hand):
                             randDeck.cards.remove(card)
                             break
+            #provide randomized hand to the non-agent opponent
+            opponentIdx = (self.root.board.activePlayerIndex + 1) % simulatedNode.board.players.__len__()
+            simulatedNode.board.players[opponentIdx].cardsInHand = [randDeck.top(), randDeck.top()]
+
+            simPhaseDiff = simulatedNode.board.phase - self.root.board.phase #see if board is not in same phase as real game
+            if simPhaseDiff > 0: #if simulation is not synced, fill in community cards
+                # print("Simulating phase difference")    
                 if community.__len__() == 0 and simulatedNode.board.phase >= 2: #if past phase 1 and no community cards, add them
                     for _ in range(3):
                         # print("Added 3 community card")

@@ -10,6 +10,7 @@ from poker import Poker
 from player import Player
 from realPlayer import RealPlayer
 from call_agent import CallAgent
+from monte_carlo_agent import MonteCarloAgent
 
 class TestPoker:
 
@@ -61,6 +62,7 @@ class TestPoker:
         p1_wins = 0
         p2_wins = 0
         for i in range(self.pokerGameDeckSequences.__len__()):
+            print("poker instance with players: ", self.players)
             pokerInstance = Poker(self.players, self.startChips, self.minBet, False, self.pokerGameDeckSequences[i], supressOutput=True)
             winner = pokerInstance.runGame()
             if winner[0].id == self.players[0].id:
@@ -89,16 +91,23 @@ class TestPoker:
         self.players.append(temp)
         self.playerIDCount += 1
 
+    def addMonteAgent(self):
+        temp = MonteCarloAgent(self.playerIDCount, 0)
+        self.players.append(temp)
+        self.playerIDCount += 1
+
 ###### DEFAULT OPTIONS:
 print("hello")
 test = TestPoker(100, 2)
-# test.addRealPlayer()
-# test.addRealPlayer()
-test.addCallAgent()
-test.addCallAgent()
+test.addRealPlayer()
+test.addRealPlayer()
+# test.addCallAgent()
+# test.addCallAgent()
+# test.addMonteAgent()
 # test.parseFile("../Testing/test_sequencesRound.txt")
-# test.parseFile("../Testing/test_sequencesRound3.txt")
-test.parseFile("../Testing/test_sequences.txt")
+test.parseFile("../Testing/test_sequencesRound3.txt")
+# test.parseFile("../Testing/test_sequences.txt")
+print("running test")
 test.runTest()
 
 print("RESULT")

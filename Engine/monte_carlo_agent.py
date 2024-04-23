@@ -420,7 +420,7 @@ class MonteCarloAgent(Agent):
                 # Active player takes a turn
                 # Get the action
                 # Random Action
-                availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(simulatedBoard)
+                availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
                 randomActionIdx = randrange(availableSimActions)
                 randomAction = availableSimActions[randomActionIdx]
                 # Handle the action

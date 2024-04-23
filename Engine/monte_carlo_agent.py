@@ -116,7 +116,7 @@ class MonteCarloAgent(Agent):
             elif chosen.children.__len__() == 0:
                 return chosen
             else:
-                return MonteCarloAgent.MCTree.selectRecursion(chosen.children)
+                return MonteCarloAgent.MCTree.selectRecursion(self, chosen.children)
 
         # Use UCB1 Algorithm to select a leaf node from the tree to expand
         #   Go layer by layer, choose a node from the layer with the highest UCB1 Score
@@ -201,7 +201,9 @@ class MonteCarloAgent(Agent):
                     elif board.playersAllIn[i]:
                         continue
                     board.playersPassing[i] = False
-
+            # print("players passing inside", board.playersPassing)
+            # print("players all in", board.playersAllIn)
+            # print("active player index", board.activePlayerIndex)
             # Update the pot
             board.pot += board.players[board.activePlayerIndex].bet(playerBet)
 
@@ -309,7 +311,7 @@ class MonteCarloAgent(Agent):
                 return leaf
             
             newBoard = copy.deepcopy(leaf.board)
-
+            randomActionIdx = -1
             if newBoard.playersFolding[newBoard.activePlayerIndex] or newBoard.playersAllIn[newBoard.activePlayerIndex]:
                 newBoard.playersPassing[newBoard.activePlayerIndex] = True
             else:
@@ -351,38 +353,70 @@ class MonteCarloAgent(Agent):
             leaf.children.append(newChild)
             
             return newChild
+        
+        def endTurn(board): # Check if the phase should change (all players are passive)
+            # If any of the players are not passive, continue this phase
+            for j in range(board.playersPassing.__len__()):
+                if board.playersPassing[j] == False:
+                    return False
 
+            # Increment the phase and reset the board
+            board.phase += 1
+            for i in range(board.players.__len__()):
+                board.playersPassing[i] = False
+                board.playersFolding[i] = False
+                board.playersAllIn[i] = False
+            return True
+
+            
         # Run a simulation on the given node
         #   This is where a deck sequence is generated based off of what we know (board variable of node)
         #   Return [amount], where amount is the amount won in the round. (positive is win) (0 is tie (two player game)) (negative is loss)
         def SIMULATE(self, node):
             simulatedNode = copy.deepcopy(node)
-
+            
+            # reset board
+            for i in range(simulatedNode.board.players.__len__()):
+                simulatedNode.board.playersPassing[i] = False
+                simulatedNode.board.playersFolding[i] = False
+                simulatedNode.board.playersAllIn[i] = False
+            print("Simulate phase: " + str(simulatedNode.board.phase))
             community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
 
             simPhaseDiff = simulatedNode.board.phase - self.root.board.phase #see if board is not in same phase as real game
-
+            randDeck = Deck(True, None)
             if simPhaseDiff > 0: #if simulation is not synced, fill in community cards
-                randDeck = Deck(True, None)
+                # print("Simulating phase difference")    
                 for card_in_hand in simulatedNode.board.players[simulatedNode.board.activePlayerIndex].cardsInHand:
                     for card in randDeck.cards:
                         if str(card) == str(card_in_hand):
                             randDeck.cards.remove(card)
                             break
-                if simulatedNode.board.phase == 1:
+                if community.__len__() == 0 and simulatedNode.board.phase >= 2: #if past phase 1 and no community cards, add them
                     for _ in range(3):
+                        # print("Added 3 community card")
                         community.append(randDeck.top())
-                else:
+                if community.__len__() == 3 and simulatedNode.board.phase >= 3: #if past phase 2 and only 3 community cards, add them
                     community.append(randDeck.top())
+                if simulatedNode.board.phase >= 4: # if phase 4 or 5, add last community card
+                    # print("Added community card")
+                    community.append(randDeck.top())
+                    # print("Community length: " + str(len(community)))
 
             if simulatedNode.board.phase == 5: #if board is in scoring phase, evaluate
-                scores = []
-                for pl in node.board.players:
-                    if pl in node.board.playersFolding: ##how do we know which player score this is for?
-                        scores.append(0)
-                    else:
-                        hand = pl.cardsInHand + node.board.community
-                        scores.append(MonteCarloAgent.handScore(hand))
+                scores = [None, None] 
+                folded = False
+                for i in range(node.board.players.__len__()):
+                    if node.board.playersFolding[i]: #if player folded, set score to 0 and the other to 1
+                        scores[i] = 0
+                        scores[(i + 1) % 2] = 1
+                        folded = True
+                        break
+                if(not folded): # if no players folded, calculate their score
+                    for pl in node.board.players:
+                        hand = pl.cardsInHand + community
+                        scores[pl.id - 1] = MonteCarloAgent.handScore(hand) 
+                        # I had to adjust this code because handScore expects a 7 card hand and that's not possible if a player folds because the game ends prematurely
                 
                 playerScore = scores[self.root.board.activePlayerIndex]
                 maxScore = max(scores)
@@ -394,10 +428,56 @@ class MonteCarloAgent(Agent):
                         if p != self.root.board.activePlayerIndex and scores[p] == maxScore:
                             return 0
                         else: 
-                            return 1
-            else: 
-                #TODO: implement simple agent
-                pass
+                            return 1 
+            else:
+                end = False
+                while(not end):
+                    # Given board state, determine active player action
+                    # Update board state with active player action
+                    # Keep going until both players are passive
+                    
+                    randomActionIdx = randrange(simulatedNode.availableActions.__len__())
+                    randomAction = simulatedNode.availableActions[randomActionIdx]
+                    # TODO: Perform the action on newBoard!!!
+                    # NOTE: This can likely be done by copying some methods from round, making them static, and then using them.
+                    #       These new static methods should be made in such a way that they can be used in the simulations too!
+                    # print("players passing: ",simulatedNode.board.playersPassing)
+                    
+                    # Handle player action
+                    print("Random Action: " + str(randomAction) +" player index: "+str(simulatedNode.board.activePlayerIndex))
+                    if randomAction in [Action.MIN_BET,Action.LOW_BET,Action.MID_BET,Action.HIGH_BET]:
+                        self.handleBet(simulatedNode.board,randomAction)
+                    elif randomAction == Action.ALL_IN:
+                        self.handleAllIn(simulatedNode.board)
+                    elif randomAction == Action.OP_MAX:
+                        self.handleOpMax(simulatedNode.board)
+                    elif randomAction == Action.CALL:
+                        self.handleCall(simulatedNode.board)
+                    elif randomAction == Action.CHECK:
+                        # Passing
+                        simulatedNode.board.playersPassing[simulatedNode.board.activePlayerIndex] = True
+                    elif randomAction == Action.FOLD:
+                        # Folded
+                        print("Player " + str(simulatedNode.board.activePlayerIndex) + " folded")
+                        simulatedNode.board.playersFolding[simulatedNode.board.activePlayerIndex] = True
+                        # Passing
+                        simulatedNode.board.playersPassing[simulatedNode.board.activePlayerIndex] = True
+                        simulatedNode.board.phase = 5
+                        return self.SIMULATE(simulatedNode) 
+
+                    # After accounting for the applied action, it is now the next player's turn
+                    simulatedNode.board.activePlayerIndex += 1
+                    simulatedNode.board.activePlayerIndex = (simulatedNode.board.activePlayerIndex) % simulatedNode.board.players.__len__()
+                    
+                    
+                    
+                    end = MonteCarloAgent.MCTree.endTurn(simulatedNode.board)
+                    # print("players all in",simulatedNode.board.playersAllIn)
+                    # print("End phase?", end)
+                    # simulatedNode.board.phase += 1 this is done in phaseChangeCheck
+                # Call simulate again but with a new phase
+                simulatedNode.board.community = community
+                return self.SIMULATE(simulatedNode) 
 
 
             
@@ -469,22 +549,29 @@ class MonteCarloAgent(Agent):
             if board.players[int(opponentIdx)].chips == 0:
                 # Opponent is already all in
                 validActions.remove(Action.OP_MAX)
-                validActions.remove(Action.MIN_BET)
-                validActions.remove(Action.MID_BET)
-                validActions.remove(Action.HIGH_BET)
+                if Action.MIN_BET in validActions:
+                    validActions.remove(Action.MIN_BET)
+                if Action.MID_BET in validActions:
+                    validActions.remove(Action.MID_BET)
+                if Action.HIGH_BET in validActions:
+                    validActions.remove(Action.HIGH_BET)
             if board.players[int(opponentIdx)].chips + incomingBet >= board.players[int(board.activePlayerIndex)].chips:
                 # Not enough chips to overbet other player
-                validActions.remove(Action.OP_MAX)
+                if Action.OP_MAX in validActions:
+                    validActions.remove(Action.OP_MAX)
             else:
                 # These actions would now overbet the opponent max
                 validActions.remove(Action.ALL_IN)
                 opponentMax = board.players[int(opponentIdx)].chips
                 if incomingBet + board.players[board.activePlayerIndex].chips * BetRatio.LOW_BET > opponentMax:
-                    validActions.remove(Action.LOW_BET)
+                    if Action.LOW_BET in validActions:
+                        validActions.remove(Action.LOW_BET)
                 if incomingBet + board.players[board.activePlayerIndex].chips * BetRatio.MID_BET > opponentMax:
-                    validActions.remove(Action.MID_BET)
+                    if Action.MID_BET in validActions:
+                        validActions.remove(Action.MID_BET)
                 if incomingBet + board.players[board.activePlayerIndex].chips * BetRatio.HIGH_BET > opponentMax:
-                    validActions.remove(Action.HIGH_BET)
+                    if Action.HIGH_BET in validActions:
+                        validActions.remove(Action.HIGH_BET)
             
             return validActions
 
@@ -535,6 +622,7 @@ class MonteCarloAgent(Agent):
             leaf = tree.SELECT()
             child = tree.EXPAND(leaf)
             # NOTE: SIMULATE has not been implemented
+            print("simulation", i)
             result = tree.SIMULATE(child)
             tree.BACK_PROPAGATE(result, child)
 
@@ -543,6 +631,7 @@ class MonteCarloAgent(Agent):
         for i in range(tree.root.children.__len__()):
             node = tree.root.children[i]
             numPlayouts = MonteCarloAgent.MCTree.N(node)
+            print("Node: " + str(node.playerAction) + " Playouts: " + str(numPlayouts) + " U: " + str(MonteCarloAgent.MCTree.U(node)))
             if maxNumPlayouts is None or numPlayouts > maxNumPlayouts or (numPlayouts == maxNumPlayouts and MonteCarloAgent.MCTree.U(node) > MonteCarloAgent.MCTree.U(chosenNode)):
                 maxNumPlayouts = numPlayouts
                 chosenNode = node

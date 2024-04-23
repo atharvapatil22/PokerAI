@@ -141,8 +141,10 @@ class Agent(Player):
             # Look at two cards at a time
             # j is the first (lower)
             j = i % 7
+            # j = i % vals.__len__()
             # h is the second (higher)
             h = (i + 1) % 7
+            # h = (i + 1) % vals.__len__()
             # initialize diff
             diff = 0
             # If our FIRST card is an ace, treat it like a 1

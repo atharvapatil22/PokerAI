@@ -67,6 +67,7 @@ class MonteCarloAgent(Agent):
         def __init__(self, boardState):
 
             self.root = MonteCarloAgent.MCNode(boardState, None, False, None)
+            self.agentIndex = copy.deepcopy(boardState.activePlayerIndex)
             #NFNF
 
         # Utility of node n
@@ -300,6 +301,9 @@ class MonteCarloAgent(Agent):
                     board.activePlayerIndex = board.buttonPlayerIndex + 1
                 else:
                     board.activePlayerIndex = board.buttonPlayerIndex
+                return True
+            else:
+                return False
                 
 
         # Create child node for the selected leaf node based on valid game actions
@@ -344,9 +348,13 @@ class MonteCarloAgent(Agent):
             newBoard.activePlayerIndex += 1
             newBoard.activePlayerIndex = (newBoard.activePlayerIndex) % newBoard.players.__len__()
             
-            # This method will return True if an end state is reached, but in terms of creating new nodes,
-            # we kind of don't care. That is just there so the method can be used in simulations
-            MonteCarloAgent.MCTree.phaseChangeCheck(newBoard)
+            # This method will return True if phase is changed, repeat until it returns false,
+            # or if the phase is 5 (end state)
+            phaseChange = True
+            while phaseChange:
+                phaseChange = MonteCarloAgent.MCTree.phaseChangeCheck(newBoard)
+                if newBoard.phase == 5:
+                    phaseChange = False
 
             newChild = MonteCarloAgent.MCNode(newBoard, leaf, not leaf.isAgent, leaf.availableActions.pop(randomActionIdx))
 
@@ -368,6 +376,150 @@ class MonteCarloAgent(Agent):
                 board.playersAllIn[i] = False
             return True
 
+        def SIMULATENEW(self, node):
+            simulatedBoard = copy.deepcopy(node.board)
+
+            opponentIdx = (self.agentIndex + 1) % simulatedBoard.players.__len__()
+            # The index of the player who made the choice can be derived from the isAgent field
+            #   The index of the player who made the choice, is the player BEFORE the active player
+            simulatedIndex = self.agentIndex if node.isAgent else opponentIdx
+
+            copy.deepcopy((simulatedBoard.activePlayerIndex + 1) % simulatedBoard.players.__len__())
+
+            #create newly randomized deck
+            randDeck = Deck(True, None)
+            #remove cards that are in the agent's hand and community
+            removeCards = simulatedBoard.players[self.agentIndex].cardsInHand + self.root.board.community
+            #remove cards that are in the agent's hand and community
+            for cardToRemove in removeCards:
+                for card in randDeck.cards:
+                    if str(card) == str(cardToRemove):
+                        randDeck.cards.remove(card)
+                        break
+            
+            simulatedBoard.players[opponentIdx].cardsInHand = [randDeck.top(), randDeck.top()]
+
+            simPhaseDiff = simulatedBoard.phase - self.root.board.phase #see if board is not in same phase as real game
+            if simPhaseDiff > 0: #if simulation is not synced, fill in community cards
+                # print("Simulating phase difference")    
+                if simulatedBoard.community.__len__() == 0 and simulatedBoard.phase >= 2: #if past phase 1 and no community cards, add them
+                    for _ in range(3):
+                        # print("Added 3 community card")
+                        simulatedBoard.community.append(randDeck.top())
+                if simulatedBoard.community.__len__() == 3 and simulatedBoard.phase >= 3: #if past phase 2 and only 3 community cards, add them
+                    simulatedBoard.community.append(randDeck.top())
+                if simulatedBoard.phase >= 4: # if phase 4 or 5, add last community card
+                    # print("Added community card")
+                    simulatedBoard.community.append(randDeck.top())
+                    # print("Community length: " + str(len(community)))
+            
+            # Setup complete, ready to begin
+            while simulatedBoard.phase < 5:
+                # Alternate turns, similar logic to round.py
+
+                # Active player takes a turn
+                # Get the action
+                # Random Action
+                availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(simulatedBoard)
+                randomActionIdx = randrange(availableSimActions)
+                randomAction = availableSimActions[randomActionIdx]
+                # Handle the action
+                # Handle player action
+                if randomAction in [Action.MIN_BET,Action.LOW_BET,Action.MID_BET,Action.HIGH_BET]:
+                    self.handleBet(simulatedBoard,randomAction)
+                elif randomAction == Action.ALL_IN:
+                    self.handleAllIn(simulatedBoard)
+                elif randomAction == Action.OP_MAX:
+                    self.handleOpMax(simulatedBoard)
+                elif randomAction == Action.CALL:
+                    self.handleCall(simulatedBoard)
+                elif randomAction == Action.CHECK:
+                    # Passing
+                    simulatedBoard.playersPassing[simulatedBoard.activePlayerIndex] = True
+                elif randomAction == Action.FOLD:
+                    # Folded
+                    simulatedBoard.playersFolding[simulatedBoard.activePlayerIndex] = True
+                    # Passing
+                    simulatedBoard.playersPassing[simulatedBoard.activePlayerIndex] = True
+
+                # After accounting for the applied action, it is now the next player's turn
+                # Increment turn
+                simulatedBoard.activePlayerIndex += 1
+                # Handle overflow
+                simulatedBoard.activePlayerIndex = (simulatedBoard.activePlayerIndex) % simulatedBoard.players.__len__()
+                
+                # Recursive phaseChangeCheck call
+                #   Within the loop, update the community cards as necessary
+                #   Make sure to set the activePlayerIndex appropriately
+                phaseChange = True
+                while phaseChange:
+                    phaseChange = MonteCarloAgent.MCTree.phaseChangeCheck(simulatedBoard)
+                    # Handle phase change if necessary
+                    if phaseChange:
+                        # allow for checking at the beginning of each phase
+                        simulatedBoard.checkFlag = True
+                        # participating players are no longer passive
+                        for i in range(self.players.__len__()):
+                            if not simulatedBoard.playersFolding[i]:
+                                simulatedBoard.playersPassing[i] = False
+                        # handle who goes first after phase change
+                        if simulatedBoard.players.__len__() > 2:
+                            simulatedBoard.activePlayerIndex = simulatedBoard.buttonPlayerIndex + 1
+                        else:
+                            simulatedBoard.activePlayerIndex = simulatedBoard.buttonPlayerIndex
+
+                        # Handle community card update
+                        # Phase 1-->2 Preflop --> Flop
+                        if simulatedBoard.phase == 2:
+                        # if self.board.phase == 1:
+                            simulatedBoard.community.append(randDeck.top())
+                            simulatedBoard.community.append(randDeck.top())
+                            simulatedBoard.community.append(randDeck.top())
+                        # Phase 2-->3 Flop --> Turn
+                        # Phase 3-->4 Turn --> River
+                        elif simulatedBoard.phase == 3 or simulatedBoard.phase == 4:
+                        # elif self.board.phase == 2 or self.board.phase == 3:
+                            simulatedBoard.community.append(randDeck.top())
+                        # Phase 4-->5 River --> Scores
+                        elif simulatedBoard.phase == 5:
+                            break
+            
+
+            # Scoring time
+            scores = []
+            for i in range(simulatedBoard.players.__len__()):
+                # Folding players get 0 points
+                if simulatedBoard.playersFolding[i]:
+                    scores.append(0)
+                # Scores are calculated by the player objects
+                else:
+                    # REFNOTE: This could change to being done by the Engine, taking
+                    # each players 2 card hand and the community cards into account 
+                    hand = simulatedBoard.players[i].cardsInHand + simulatedBoard.community
+                    scores.append(MonteCarloAgent.handScore(hand))
+            # Find winners
+            maxScore = -1
+            winningIndex = []
+            for i in range(simulatedBoard.players.__len__()):
+                if scores[i] > maxScore:
+                    maxScore = scores[i]
+                    winningIndex = [i]
+                # There can be multiple Players with equal strength best hands
+                elif scores[i] == maxScore:
+                    winningIndex.append(i)
+            
+            if winningIndex.__len__() > 1:
+                # Tie
+                return 0
+            elif winningIndex[0] == simulatedIndex:
+                # Player who made choice resulting in node, won
+                return (simulatedBoard.pot / 2)
+            else:
+                # Player who made choice resulting in node, lost
+                return -(simulatedBoard.pot / 2)
+
+            
+
             
         # Run a simulation on the given node
         #   This is where a deck sequence is generated based off of what we know (board variable of node)
@@ -375,11 +527,14 @@ class MonteCarloAgent(Agent):
         def SIMULATE(self, node):
             simulatedNode = copy.deepcopy(node)
             
-            # reset board
-            for i in range(simulatedNode.board.players.__len__()):
-                simulatedNode.board.playersPassing[i] = False
-                simulatedNode.board.playersFolding[i] = False
-                simulatedNode.board.playersAllIn[i] = False
+            # # reset board
+            # for i in range(simulatedNode.board.players.__len__()):
+            #     print(simulatedNode.board.playersPassing[i])
+            #     print(simulatedNode.board.playersFolding[i])
+            #     print(simulatedNode.board.playersAllIn[i])
+            #     simulatedNode.board.playersPassing[i] = False
+            #     simulatedNode.board.playersFolding[i] = False
+            #     simulatedNode.board.playersAllIn[i] = False
             print("Simulate phase: " + str(simulatedNode.board.phase))
             community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
             #create newly randomized deck
@@ -478,7 +633,17 @@ class MonteCarloAgent(Agent):
                     
                     
                     
-                    end = MonteCarloAgent.MCTree.endTurn(simulatedNode.board)
+                    # end = MonteCarloAgent.MCTree.endTurn(simulatedNode.board)
+
+                    # # This method will return True if phase is changed, repeat until it returns false,
+                    # # or if the phase is 5 (end state)
+                    end = MonteCarloAgent.MCTree.phaseChangeCheck(simulatedNode.board)
+                    # phaseChange = True
+                    # while phaseChange:
+                    #     phaseChange = MonteCarloAgent.MCTree.phaseChangeCheck(simulatedNode.board)
+                    #     if simulatedNode.board.phase == 5:
+                    #         phaseChange = False
+
                     # print("players all in",simulatedNode.board.playersAllIn)
                     # print("End phase?", end)
                     # simulatedNode.board.phase += 1 this is done in phaseChangeCheck

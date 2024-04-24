@@ -11,6 +11,7 @@ from player import Player
 from realPlayer import RealPlayer
 from call_agent import CallAgent
 from monte_carlo_agent import MonteCarloAgent
+from simulation_agent import SimulationAgent
 
 class TestPoker:
 
@@ -96,6 +97,11 @@ class TestPoker:
         self.players.append(temp)
         self.playerIDCount += 1
 
+    def addSimulationAgent(self):
+        temp = SimulationAgent(self.playerIDCount, 0)
+        self.players.append(temp)
+        self.playerIDCount += 1
+
 ###### DEFAULT OPTIONS:
 print("hello")
 test = TestPoker(100, 2)
@@ -103,7 +109,8 @@ test = TestPoker(100, 2)
 # test.addRealPlayer()
 # test.addCallAgent()
 test.addCallAgent()
-test.addMonteAgent()
+# test.addMonteAgent()
+test.addSimulationAgent()
 # test.parseFile("../Testing/test_sequencesRound.txt")
 # test.parseFile("../Testing/test_sequencesRound3.txt")
 test.parseFile("../Testing/test_sequences.txt")

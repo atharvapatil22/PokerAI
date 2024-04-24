@@ -99,17 +99,20 @@ class TestPoker:
 ###### DEFAULT OPTIONS:
 print("hello")
 test = TestPoker(100, 2)
-test.addRealPlayer()
-test.addRealPlayer()
+# test.addRealPlayer()
+# test.addRealPlayer()
 # test.addCallAgent()
-# test.addCallAgent()
-# test.addMonteAgent()
+test.addCallAgent()
+test.addMonteAgent()
 # test.parseFile("../Testing/test_sequencesRound.txt")
-test.parseFile("../Testing/test_sequencesRound3.txt")
-# test.parseFile("../Testing/test_sequences.txt")
+# test.parseFile("../Testing/test_sequencesRound3.txt")
+test.parseFile("../Testing/test_sequences.txt")
 print("running test")
-test.runTest()
+# test.runTest()
+import cProfile
 
+
+cProfile.run('test.runTest()')
 print("RESULT")
 
 output1 = open("../Testing/p1Output.txt", "w")

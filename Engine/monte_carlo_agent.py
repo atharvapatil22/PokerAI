@@ -11,7 +11,7 @@ from math import sqrt, log
 class MonteCarloAgent(Agent):
 
     def get_action(self, board, validActions):
-        action = self.MONTE_CARLO_TREE_SEARCH(board, 1000)
+        action = self.MONTE_CARLO_TREE_SEARCH(board, 200)
         print(f"Monte Carlo Agent chose: {action}")
         return action
         cards_in_hand = self.cardsInHand
@@ -44,8 +44,8 @@ class MonteCarloAgent(Agent):
             else:
                 opponent_wins +=1
         your_win_percentage = your_wins/(simulations-ties)        
-        print(f"Your win percentage:", your_win_percentage)
-        print(f"Opponent win percentage:", opponent_wins/(simulations-ties))
+        # print(f"Your win percentage:", your_win_percentage)
+        # print(f"Opponent win percentage:", opponent_wins/(simulations-ties))
         if(your_win_percentage > 0.6):
             if(Action.MID_BET in validActions):
                 return Action.MID_BET
@@ -393,7 +393,7 @@ class MonteCarloAgent(Agent):
             #remove cards that are in the agent's hand and community
             for cardToRemove in removeCards:
                 for card in randDeck.cards:
-                    if str(card) == str(cardToRemove):
+                    if card.id == cardToRemove.id:
                         randDeck.cards.remove(card)
                         break
             
@@ -420,9 +420,12 @@ class MonteCarloAgent(Agent):
                 # Active player takes a turn
                 # Get the action
                 # Random Action
+                
                 availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
+                action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions, randDeck)
                 randomActionIdx = randrange(availableSimActions.__len__())
                 randomAction = availableSimActions[randomActionIdx]
+                randomAction = action
                 # Handle the action
                 # Handle player action
                 if randomAction in [Action.MIN_BET,Action.LOW_BET,Action.MID_BET,Action.HIGH_BET]:
@@ -535,7 +538,7 @@ class MonteCarloAgent(Agent):
             #     simulatedNode.board.playersPassing[i] = False
             #     simulatedNode.board.playersFolding[i] = False
             #     simulatedNode.board.playersAllIn[i] = False
-            print("Simulate phase: " + str(simulatedNode.board.phase))
+            # print("Simulate phase: " + str(simulatedNode.board.phase))
             community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
             #create newly randomized deck
             randDeck = Deck(True, None)
@@ -606,7 +609,7 @@ class MonteCarloAgent(Agent):
                     # print("players passing: ",simulatedNode.board.playersPassing)
                     
                     # Handle player action
-                    print("Random Action: " + str(randomAction) +" player index: "+str(simulatedNode.board.activePlayerIndex))
+                    # print("Random Action: " + str(randomAction) +" player index: "+str(simulatedNode.board.activePlayerIndex))
                     if randomAction in [Action.MIN_BET,Action.LOW_BET,Action.MID_BET,Action.HIGH_BET]:
                         self.handleBet(simulatedNode.board,randomAction)
                     elif randomAction == Action.ALL_IN:
@@ -620,7 +623,7 @@ class MonteCarloAgent(Agent):
                         simulatedNode.board.playersPassing[simulatedNode.board.activePlayerIndex] = True
                     elif randomAction == Action.FOLD:
                         # Folded
-                        print("Player " + str(simulatedNode.board.activePlayerIndex) + " folded")
+                        # print("Player " + str(simulatedNode.board.activePlayerIndex) + " folded")
                         simulatedNode.board.playersFolding[simulatedNode.board.activePlayerIndex] = True
                         # Passing
                         simulatedNode.board.playersPassing[simulatedNode.board.activePlayerIndex] = True
@@ -670,7 +673,7 @@ class MonteCarloAgent(Agent):
         def BACK_PROPAGATE(self, result, simNode):
             # TODO: Make the result propagate as well, storing amount of money won/lost
             # NOTE: The above TODO relies on functionality in the MCNode class that does not yet exist
-            print("Result: " + str(result))
+            # print("Result: " + str(result))
             if result > 0:
                 simNode.wins += 1
             elif result < 0:
@@ -746,6 +749,65 @@ class MonteCarloAgent(Agent):
                         validActions.remove(Action.HIGH_BET)
             
             return validActions
+        
+        def getPlayoutPolicyAction(self, board, validActions, decktop):
+            cards_in_hand = board.players[self.agentIndex].cardsInHand
+            community_cards = self.root.board.community
+            cards_to_remove = cards_in_hand + community_cards
+            your_wins = 0
+            opponent_wins = 0
+            ties = 0
+            simulations = 30
+            for _ in range(simulations):
+                deck = Deck(True, None)
+                for card_to_remove in cards_to_remove:
+                    for card in deck.cards:
+                        if card.id == card_to_remove.id:
+                            deck.cards.remove(card)
+                            break
+                # print(len(deck.cards))
+                opponent_hand = [deck.top(), deck.top()] + community_cards
+                hand = cards_in_hand + community_cards
+                randomized_community_cards = []
+                for _ in range(5-len(community_cards)):
+                    randomized_community_cards.append(deck.top())
+                opponent_hand += randomized_community_cards
+                hand += randomized_community_cards
+                hand_score = MonteCarloAgent.handScore(hand)
+                opponent_score = MonteCarloAgent.handScore(opponent_hand)
+                if hand_score > opponent_score:
+                    your_wins +=1
+                elif hand_score == opponent_score:
+                    ties +=1
+                else:
+                    opponent_wins +=1
+            your_win_percentage = (your_wins+0.5*ties)/(simulations)
+            import random as rnd
+            random_number = rnd.random()
+            if(your_win_percentage > 0.6):
+                if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
+                    if(Action.CHECK in validActions):
+                        return Action.CHECK
+                    return Action.CALL
+                if(Action.MID_BET in validActions):
+                    return Action.MID_BET
+                elif(Action.HIGH_BET in validActions):
+                    return Action.HIGH_BET
+                else:
+                    return Action.ALL_IN
+            elif(your_win_percentage > 0.4):
+                if(random_number < 0.3): # some randomness, 30% chance of being aggressive with a mid hand
+                    if(Action.MID_BET in validActions):
+                        return Action.MID_BET
+                    elif(Action.HIGH_BET in validActions):
+                        return Action.HIGH_BET
+                    else:
+                        return Action.ALL_IN
+                if(Action.CHECK in validActions):
+                    return Action.CHECK
+                return Action.CALL
+            else:
+                return Action.FOLD
 
     class MCNode:
 
@@ -794,8 +856,8 @@ class MonteCarloAgent(Agent):
             leaf = tree.SELECT()
             child = tree.EXPAND(leaf)
             # NOTE: SIMULATE has not been implemented
-            print("simulation", i)
-            result = tree.SIMULATE(child)
+            # print("simulation", i)
+            result = tree.SIMULATENEW(child)
             tree.BACK_PROPAGATE(result, child)
 
         maxNumPlayouts = None

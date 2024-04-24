@@ -73,17 +73,18 @@ class Agent(Player):
         # val takes on values 2 through 14 (2 through Ace)
         for i in range(13):
             val = i + 2
-            if vals.count(val) == 4:
+            val_count = vals.count(val)
+            if val_count == 4:
                 FOUR_KIND = True
                 FOUR_KIND_VAL = val
-            elif vals.count(val) == 3:
+            elif val_count == 3:
                 if THREE_KIND == True:
                     THREE_KIND_SECONDARY = THREE_KIND_VAL
                     THREE_KIND_VAL = val
                 else:
                     THREE_KIND = True
                     THREE_KIND_VAL = val
-            elif vals.count(val) == 2:
+            elif val_count == 2:
                 # If two pairs have already been detected, shift the values down
                 if TWO_PAIRS:
                     # Two kind val becomes the old two pairs high val

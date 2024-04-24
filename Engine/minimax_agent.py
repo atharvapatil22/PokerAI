@@ -1,11 +1,11 @@
 import random
 import copy
+import math
 from agent import Agent
 from player import Action,BetRatio
 
 # This agent can only handle 2player poker. It will have to be modified for multiplayer games.
 class MinimaxAgent(Agent):
-
     # ~~refactor : Similar function is required in round and maybe some other places. This should be refactored to be DRY
     # def: Function will return possible actions for a player at this game_state
     def possiblePlayerActions(self,game_state,p_index):
@@ -80,6 +80,23 @@ class MinimaxAgent(Agent):
                 return False
         return True
 
+    # Returns utility value for a leaf node:
+    def getUtility(self,game_state):
+        # pot_score is a rating (0-100) which determines how high or low is the ammount in pot
+        pot_score = math.floor(game_state['pot']/game_state['minBet'])
+        if pot_score > 100: pot_score = 100
+
+        # hand_score determines the score of the current hand
+        hand_score = random.randint(1,100)
+
+        # Calculate utility based on pot score and hand score
+        if abs(pot_score-hand_score):
+            return 95 - abs(pot_score-hand_score)
+        elif hand_score > pot_score:
+            return random.randint(55,85)
+        elif hand_score < pot_score:
+            return random.randint(25,45)
+
     def minimax_search(self,game_state):
         v,action = self.max_value(game_state,0)
         return action
@@ -87,7 +104,7 @@ class MinimaxAgent(Agent):
     def max_value(self,game_state,level):
         # If game-state marks the end of phase, return utility value
         if self.isPhaseOver(game_state):
-            return random.randint(0,100), None
+            return self.getUtility(game_state), None
         
         v = float('-inf')
         action = None
@@ -107,8 +124,7 @@ class MinimaxAgent(Agent):
     def min_value(self,game_state,level):
         # If game-state marks the end of phase, return utility value
         if self.isPhaseOver(game_state):
-            print("is terminal")
-            return random.randint(0,100), None
+            return self.getUtility(game_state), None
         
         v = float('inf')
         action = None
@@ -133,6 +149,7 @@ class MinimaxAgent(Agent):
         game_state['pot'] = board.pot
         game_state['currentBet'] = board.currentBet
         game_state['players'] = []
+        game_state['minBet'] = board.minBet
         for i in range(board.players.__len__()):
             game_state['players'] .append({'bet':board.playerBets[i],'chipsRemaining':board.players[i].chips,'acted':board.playerPassing[i]})
 

@@ -208,48 +208,55 @@ class MinimaxAgent(Agent):
                             return handscore
                         elif i == comb[4].value: 
                             return handscore - (13/14)
-                elif self.is_four_of_a_kind(sorted_hand):
+                elif self.is_four_of_a_kind(sorted_hand)[0]:
+                    handscore = 87
                     for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
+                        if i == self.is_four_of_a_kind(sorted_hand)[1] and i == 14:
                             return handscore
-                        elif i == comb[4].value: 
+                        elif i == self.is_four_of_a_kind(sorted_hand)[1]: 
                             return handscore - (13/14)
-                elif self.is_full_house(sorted_hand):
+                elif self.is_full_house(sorted_hand)[0]:
+                    handscore = 74
                     for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
+                        if i == self.is_full_house(sorted_hand)[1] and i == 14:
                             return handscore
-                        elif i == comb[4].value: 
+                        elif i == self.is_full_house(sorted_hand)[1]: 
                             return handscore - (13/14)
                 elif self.is_flush(sorted_hand):
+                    handscore = 61
                     for i in range(14, 0, -1):
                         if i == comb[4].value and i == 14:
                             return handscore
                         elif i == comb[4].value: 
                             return handscore - (13/14)
                 elif self.is_straight(sorted_hand):
+                    handscore = 48
                     for i in range(14, 0, -1):
                         if i == comb[4].value and i == 14:
                             return handscore
                         elif i == comb[4].value: 
                             return handscore - (13/14)
-                elif self.is_three_of_a_kind(sorted_hand):
+                elif self.is_three_of_a_kind(sorted_hand)[0]:
+                    handscore = 35
                     for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
+                        if i == self.is_three_of_a_kind(sorted_hand)[1] and i == 14:
                             return handscore
-                        elif i == comb[4].value: 
+                        elif i == self.is_three_of_a_kind(sorted_hand)[1]: 
                             return handscore - (13/14)
                 elif self.is_two_pair(sorted_hand):
+                    handscore = 22
                     for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
+                        if i == comb[3].value and i == 14:
                             return handscore
-                        elif i == comb[4].value: 
+                        elif i == comb[3].value: 
                             return handscore - (13/14)
-                elif self.is_one_pair(sorted_hand):
+                elif self.is_one_pair(sorted_hand)[0]:
+                    handscore = 9
                     for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
+                        if i == self.is_one_pair(sorted_hand)[1] and i == 14:
                             return handscore
-                        elif i == comb[4].value: 
-                            return handscore - (13/14)
+                        elif i == self.is_one_pair(sorted_hand)[1]: 
+                            return handscore - (9/14)
                 else:
                     return 0
     
@@ -267,14 +274,22 @@ class MinimaxAgent(Agent):
         rank_counts = [0] * 14
         for card in hand:
             rank_counts[card.value] += 1
-        return any(count == 4 for count in rank_counts)
+        for index,count in enumerate(rank_counts):
+            if count == 4:
+                return True, index 
+        return False, -1
 
     def is_full_house(hand):
         # Check for Full House logic
         rank_counts = [0] * 14
         for card in hand:
             rank_counts[card.value] += 1
-        return any(count == 3 for count in rank_counts) and any(count == 2 for count in rank_counts)
+        for idx, count in enumerate(rank_counts):
+            if count == 3:
+                for count in rank_counts:
+                    if count == 2:
+                        return True, idx
+        return False, -1
 
     def is_flush(hand):
         # Check for Flush logic
@@ -293,7 +308,10 @@ class MinimaxAgent(Agent):
         rank_counts = [0] * 14
         for card in hand:
             rank_counts[card.value] += 1
-        return any(count == 3 for count in rank_counts)
+        for index,count in enumerate(rank_counts):
+            if count == 3:
+                return True, index 
+        return False, -1
 
     def is_two_pair(hand):
         # Check for Two Pair logic
@@ -309,7 +327,10 @@ class MinimaxAgent(Agent):
         rank_counts = [0] * 14
         for card in hand:
             rank_counts[card.value] += 1
-        return any(count == 2 for count in rank_counts)
+        for index,count in enumerate(rank_counts):
+            if count == 2:
+                return True, index 
+        return False, -1
                     
             
             

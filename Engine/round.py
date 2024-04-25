@@ -415,7 +415,7 @@ class Round:
         flushCards = []
         # Only calculate if a flush is present
         if FLUSH:
-            for i in range(7):
+            for i in range(cards.__len__()):
                 if cards[i].suit == FLUSH_SUIT:
                     # cards.pop(i)
                     flushCards.append(cards[i])

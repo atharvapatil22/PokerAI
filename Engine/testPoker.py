@@ -63,7 +63,7 @@ class TestPoker:
         p1_wins = 0
         p2_wins = 0
         for i in range(self.pokerGameDeckSequences.__len__()):
-            print("poker instance with players: ", self.players)
+            # print("poker instance with players: ", self.players)
             pokerInstance = Poker(self.players, self.startChips, self.minBet, False, self.pokerGameDeckSequences[i], supressOutput=True)
             winner = pokerInstance.runGame()
             if winner[0].id == self.players[0].id:
@@ -71,6 +71,7 @@ class TestPoker:
             else:
                 p2_wins += 1
             print(f"Game {i} complete")
+            print(f"Winner was player {winner[0].id}")
             # Handle new information about players here if necessary
         print(f"Player 1 win percentage: {p1_wins / self.pokerGameDeckSequences.__len__()}")
         print(f"Player 2 win percentage: {p2_wins / self.pokerGameDeckSequences.__len__()}")
@@ -109,8 +110,8 @@ test = TestPoker(100, 2)
 # test.addRealPlayer()
 # test.addCallAgent()
 test.addCallAgent()
-# test.addMonteAgent()
-test.addSimulationAgent()
+test.addMonteAgent()
+# test.addSimulationAgent()
 # test.parseFile("../Testing/test_sequencesRound.txt")
 # test.parseFile("../Testing/test_sequencesRound3.txt")
 test.parseFile("../Testing/test_sequences.txt")

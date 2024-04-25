@@ -141,11 +141,11 @@ class Agent(Player):
         for i in range(12):
             # Look at two cards at a time
             # j is the first (lower)
-            j = i % 7
-            # j = i % vals.__len__()
+            # j = i % 7
+            j = i % vals.__len__()
             # h is the second (higher)
-            h = (i + 1) % 7
-            # h = (i + 1) % vals.__len__()
+            # h = (i + 1) % 7
+            h = (i + 1) % vals.__len__()
             # initialize diff
             diff = 0
             # If our FIRST card is an ace, treat it like a 1
@@ -196,7 +196,7 @@ class Agent(Player):
         flushCards = []
         # Only calculate if a flush is present
         if FLUSH:
-            for i in range(7):
+            for i in range(cards.__len__()):
                 if cards[i].suit == FLUSH_SUIT:
                     # cards.pop(i)
                     flushCards.append(cards[i])

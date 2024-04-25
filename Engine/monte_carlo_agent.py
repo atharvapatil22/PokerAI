@@ -1,3 +1,4 @@
+from card import Card
 from player import Player
 from player import Action, BetRatio
 from agent import Agent
@@ -11,7 +12,7 @@ from math import sqrt, log, ceil
 class MonteCarloAgent(Agent):
 
     def get_action(self, board, validActions):
-        action = self.MONTE_CARLO_TREE_SEARCH(board, 1000)
+        action = self.MONTE_CARLO_TREE_SEARCH(board, 200)
         # print(f"Monte Carlo Agent chose: {action}")
         return action
         cards_in_hand = self.cardsInHand
@@ -392,7 +393,7 @@ class MonteCarloAgent(Agent):
             #   The index of the player who made the choice, is the player BEFORE the active player
             simulatedIndex = self.agentIndex if node.isAgent else opponentIdx
 
-            copy.deepcopy((simulatedBoard.activePlayerIndex + 1) % simulatedBoard.players.__len__())
+            # copy.deepcopy((simulatedBoard.activePlayerIndex + 1) % simulatedBoard.players.__len__())
 
             #create newly randomized deck
             randDeck = Deck(True, None)
@@ -432,10 +433,13 @@ class MonteCarloAgent(Agent):
                 ourChips = simulatedBoard.players[simulatedBoard.activePlayerIndex].chips
                 
                 availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
-                # action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions, randDeck)
+                action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimple(self, simulatedBoard, availableSimActions)
-                action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
+                # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
 
+                # get random action
+                # randomActionIdx = randrange(availableSimActions.__len__())
+                # action = availableSimActions[randomActionIdx]
                 opponentChips = simulatedBoard.players[simulatedBoard.activePlayerIndex].chips
                 if (action == Action.LOW_BET and opponentChips < ourChips * BetRatio.LOW_BET or 
                     action == Action.MID_BET and opponentChips < ourChips * BetRatio.MID_BET or 
@@ -559,7 +563,10 @@ class MonteCarloAgent(Agent):
             #     simulatedNode.board.playersFolding[i] = False
             #     simulatedNode.board.playersAllIn[i] = False
             # print("Simulate phase: " + str(simulatedNode.board.phase))
-            community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
+            community = []
+            for card in simulatedNode.board.community:
+                community.append(Card(card.value, card.suit))
+            # community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
             #create newly randomized deck
             randDeck = Deck(True, None)
             #remove cards that are in the agent's hand and community
@@ -774,7 +781,7 @@ class MonteCarloAgent(Agent):
             
             return validActions
         
-        def getPlayoutPolicyAction(self, board, validActions, decktop):
+        def getPlayoutPolicyAction(self, board, validActions):
             cards_in_hand = board.players[self.agentIndex].cardsInHand
             community_cards = self.root.board.community
             cards_to_remove = cards_in_hand + community_cards
@@ -782,13 +789,16 @@ class MonteCarloAgent(Agent):
             opponent_wins = 0
             ties = 0
             simulations = 30
+            total_hand_score = 0
+            deck = Deck(True, None)
+            for card_to_remove in cards_to_remove:
+                for card in deck.cards:
+                    if card.id == card_to_remove.id:
+                        deck.cards.remove(card)
+                        break
+            original_cards = deck.cards
             for _ in range(simulations):
-                deck = Deck(True, None)
-                for card_to_remove in cards_to_remove:
-                    for card in deck.cards:
-                        if card.id == card_to_remove.id:
-                            deck.cards.remove(card)
-                            break
+                deck.cards = original_cards.copy()
                 # print(len(deck.cards))
                 opponent_hand = [deck.top(), deck.top()] + community_cards
                 hand = cards_in_hand + community_cards
@@ -798,6 +808,7 @@ class MonteCarloAgent(Agent):
                 opponent_hand += randomized_community_cards
                 hand += randomized_community_cards
                 hand_score = MonteCarloAgent.handScore(hand)
+                total_hand_score += hand_score
                 opponent_score = MonteCarloAgent.handScore(opponent_hand)
                 if hand_score > opponent_score:
                     your_wins +=1
@@ -808,6 +819,10 @@ class MonteCarloAgent(Agent):
             your_win_percentage = (your_wins+0.5*ties)/(simulations)
             import random as rnd
             random_number = rnd.random()
+            average_hand_score = total_hand_score/simulations
+            # print("Average hand score: ", average_hand_score)
+            # print("Average hand score: ", average_hand_score)
+            # if(average_hand_score > 250):
             if(your_win_percentage > 0.6):
                 if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                     if(Action.CHECK in validActions):
@@ -819,6 +834,7 @@ class MonteCarloAgent(Agent):
                     return Action.HIGH_BET
                 else:
                     return Action.ALL_IN
+            # elif(average_hand_score > 180):
             elif(your_win_percentage > 0.4):
                 if(random_number < 0.3): # some randomness, 30% chance of being aggressive with a mid hand
                     if(Action.MID_BET in validActions):

@@ -1,6 +1,8 @@
 import random
 import copy
+import itertools
 import math
+import collections
 from agent import Agent
 from player import Action,BetRatio
 
@@ -87,7 +89,7 @@ class MinimaxAgent(Agent):
         if pot_score > 100: pot_score = 100
 
         # hand_score determines the score of the current hand
-        hand_score = random.randint(1,100)
+        hand_score = self.hand_strength(game_state['community'],self.cardsInHand)
 
         # Calculate utility based on pot score and hand score
         if abs(pot_score-hand_score):
@@ -148,6 +150,7 @@ class MinimaxAgent(Agent):
         game_state ={}
         game_state['pot'] = board.pot
         game_state['currentBet'] = board.currentBet
+        game_state['community'] = board.community
         game_state['players'] = []
         game_state['minBet'] = board.minBet
         for i in range(board.players.__len__()):
@@ -167,3 +170,150 @@ class MinimaxAgent(Agent):
         res = self.minimax_search(game_state)
         print("You should take this action",res)
         return 
+    
+    def hand_strength(self, community, cardsInHand):
+        # Open the text file and read the data
+        if len(community) == 0:
+            file_path = "hand_strength.txt"  # Change this to the path of your text file
+            with open(file_path, 'r') as file:
+                data = file.read()
+
+            # Splitting the data into lines and then into hole and rank
+            lines = data.strip().split('\n')
+            hole_rank_map = {}
+            
+            for line in lines:
+                rank, hole = line.split('|')
+                print(hole)
+                print(rank)
+                hole = tuple(map(int, hole.strip().split(',')))
+                rank = int(rank.strip())
+                rank = 169 - rank * (100/169)
+                hole_rank_map[hole] = rank
+            cards = tuple(cardsInHand[0].value, cardsInHand[1].value)
+            currRank = hole_rank_map[cards]
+            if currRank:
+                return currRank
+            else:
+                return 0
+        else:
+            totalCards = community + cardsInHand
+            combinations = list(itertools.combinations(totalCards, 5))
+            for comb in combinations:
+                sorted_hand = sorted(comb, key=lambda card: card.value)
+                if self.is_straight_flush(sorted_hand):
+                    handscore = 100
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                elif self.is_four_of_a_kind(sorted_hand):
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                elif self.is_full_house(sorted_hand):
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                elif self.is_flush(sorted_hand):
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                elif self.is_straight(sorted_hand):
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                elif self.is_three_of_a_kind(sorted_hand):
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                elif self.is_two_pair(sorted_hand):
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                elif self.is_one_pair(sorted_hand):
+                    for i in range(14, 0, -1):
+                        if i == comb[4].value and i == 14:
+                            return handscore
+                        elif i == comb[4].value: 
+                            return handscore - (13/14)
+                else:
+                    return 0
+    
+    
+    def straight_flush(hand):
+        suits_set = set(card.suit for card in hand)
+        if len(suits_set) == 1:
+            for i in range(1, len(hand)):
+                if hand[i].value != hand[i-1].value + 1:
+                    return False
+            return True
+        return False
+    def is_four_of_a_kind(hand):
+        # Check for Four of a Kind logic
+        rank_counts = [0] * 14
+        for card in hand:
+            rank_counts[card.value] += 1
+        return any(count == 4 for count in rank_counts)
+
+    def is_full_house(hand):
+        # Check for Full House logic
+        rank_counts = [0] * 14
+        for card in hand:
+            rank_counts[card.value] += 1
+        return any(count == 3 for count in rank_counts) and any(count == 2 for count in rank_counts)
+
+    def is_flush(hand):
+        # Check for Flush logic
+        suits_set = set(card.suit for card in hand)
+        return len(suits_set) == 1
+
+    def is_straight(hand):
+        # Check for Straight logic
+        for i in range(1, len(hand)):
+            if hand[i].value != hand[i-1].value + 1:
+                return False
+        return True
+
+    def is_three_of_a_kind(hand):
+        # Check for Three of a Kind logic
+        rank_counts = [0] * 14
+        for card in hand:
+            rank_counts[card.value] += 1
+        return any(count == 3 for count in rank_counts)
+
+    def is_two_pair(hand):
+        # Check for Two Pair logic
+        rank_counts = collections.Counter(card.value for card in hand)
+        num_pairs = 0
+        for count in rank_counts.items():
+            if count == 2:
+                num_pairs += 1
+        return num_pairs == 2
+
+    def is_one_pair(hand):
+        # Check for One Pair logic
+        rank_counts = [0] * 14
+        for card in hand:
+            rank_counts[card.value] += 1
+        return any(count == 2 for count in rank_counts)
+                    
+            
+            
+    
+
+
+

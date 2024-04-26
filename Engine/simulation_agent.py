@@ -11,7 +11,7 @@ class SimulationAgent(Agent):
         your_wins = 0
         opponent_wins = 0
         ties = 0
-        simulations = 300
+        simulations = 10
         for _ in range(simulations):
             deck = Deck(True, None)
             for card_in_hand in cards_in_hand:
@@ -39,7 +39,7 @@ class SimulationAgent(Agent):
         import random as rnd
         random_number = rnd.random() # Leaving this in here but the randomness made it WAY worse (75% vs 40% win rate)
         if(your_win_percentage > 0.6):
-            if(random_number < 0): # some randomness, 30% chance of being passive with a good hand
+            if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                 if(Action.CHECK in validActions):
                     return Action.CHECK
                 return Action.CALL
@@ -50,7 +50,7 @@ class SimulationAgent(Agent):
             else:
                 return Action.ALL_IN
         elif(your_win_percentage > 0.4):
-            if(random_number < 0): # some randomness, 30% chance of being aggressive with a mid hand
+            if(random_number < 0.3): # some randomness, 30% chance of being aggressive with a mid hand
                 if(Action.MID_BET in validActions):
                     return Action.MID_BET
                 elif(Action.HIGH_BET in validActions):

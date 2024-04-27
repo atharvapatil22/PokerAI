@@ -10,6 +10,8 @@ from poker import Poker
 from player import Player
 from realPlayer import RealPlayer
 from call_agent import CallAgent
+from minimax_agent import MinimaxAgent
+
 
 class TestPoker:
 
@@ -88,13 +90,19 @@ class TestPoker:
         temp = CallAgent(self.playerIDCount, 0)
         self.players.append(temp)
         self.playerIDCount += 1
+    
+    def addMinMaxAgent(self):
+        temp = MinimaxAgent(self.playerIDCount, 0)
+        self.players.append(temp)
+        self.playerIDCount += 1
+
 
 ###### DEFAULT OPTIONS:
 print("hello")
 test = TestPoker(100, 2)
 # test.addRealPlayer()
 # test.addRealPlayer()
-test.addCallAgent()
+test.addMinMaxAgent()
 test.addCallAgent()
 # test.parseFile("../Testing/test_sequencesRound.txt")
 # test.parseFile("../Testing/test_sequencesRound3.txt")

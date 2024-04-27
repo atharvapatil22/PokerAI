@@ -154,7 +154,7 @@ class MinimaxAgent(Agent):
         game_state['players'] = []
         game_state['minBet'] = board.minBet
         for i in range(board.players.__len__()):
-            game_state['players'] .append({'bet':board.playerBets[i],'chipsRemaining':board.players[i].chips,'acted':board.playerPassing[i]})
+            game_state['players'] .append({'bet':board.playerBets[i],'chipsRemaining':board.players[i].chips,'acted':board.playersPassing[i]})
 
         return game_state
   
@@ -184,15 +184,13 @@ class MinimaxAgent(Agent):
             
             for line in lines:
                 rank, hole = line.split('|')
-                print(hole)
-                print(rank)
                 hole = tuple(map(int, hole.strip().split(',')))
                 rank = int(rank.strip())
                 rank = 169 - rank * (100/169)
                 hole_rank_map[hole] = rank
-            cards = tuple(cardsInHand[0].value, cardsInHand[1].value)
-            currRank = hole_rank_map[cards]
-            if currRank:
+            cards = tuple((cardsInHand[0].value, cardsInHand[1].value))
+            if cards in hole_rank_map:
+                currRank = hole_rank_map[cards]
                 return currRank
             else:
                 return 0

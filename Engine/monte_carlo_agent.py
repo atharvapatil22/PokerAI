@@ -388,7 +388,8 @@ class MonteCarloAgent(Agent):
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimple(self, simulatedBoard, availableSimActions)
                 action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
-
+                # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpAdj(self, simulatedBoard, availableSimActions)
+                
                 # get random action
                 # randomActionIdx = randrange(availableSimActions.__len__())
                 # action = availableSimActions[randomActionIdx]
@@ -949,7 +950,112 @@ class MonteCarloAgent(Agent):
             else:
                 return Action.FOLD
             
+        def getPlayoutPolicyActionSimpAdj(self, board, validActions):
+            cards_in_hand = board.players[board.activePlayerIndex].cardsInHand
+            community_cards = self.root.board.community
+            incomingBet = board.currentBet - board.playerBets[board.activePlayerIndex]
+            playerChips = board.players[board.activePlayerIndex].chips
+            playerBet = board.playerBets[board.activePlayerIndex]
+            playerTotal = playerChips + playerBet
+            modifier = 0 
+            if incomingBet >= playerTotal: # maybe able to remove this one
+                modifier = 5
+            elif incomingBet >= playerTotal * BetRatio.HIGH_BET:
+                modifier = 4
+            elif incomingBet >= playerTotal * BetRatio.MID_BET:
+                modifier = 3
+            elif incomingBet >= playerTotal * BetRatio.LOW_BET:
+                modifier = 2
+            elif incomingBet == board.minBet: 
+                modifier = 1
+            else:
+                modifier = 0
 
+            policyRank = -1
+            # No community cards are present (hole cards only)
+            if community_cards.__len__() == 0:
+                sameSuit = True if cards_in_hand[0].suit == cards_in_hand[1].suit else False
+                # valKey as a tuple of the two card values, sorted
+                valKey = tuple(sorted([cards_in_hand[0].value, cards_in_hand[1].value]))
+                handRank = self.OFF_SUIT[valKey] if not sameSuit else self.ON_SUIT[valKey]
+                policyRank = handRank - modifier
+                
+            # Some community cards are present      
+            else:
+                handScore = MonteCarloAgent.handScore(cards_in_hand + community_cards)
+                handRank = 11 - ceil(handScore / 100)
+                policyRank = handRank - modifier - 4
+                if policyRank < 1:
+                    policyRank = 1
+
+             # Make the player act probibilistically according to how strong their hand is and the modifier
+            if policyRank == 1 or policyRank == 2:
+                return Action.ALL_IN
+                    
+            elif policyRank == 3:
+                if Action.HIGH_BET in validActions:
+                    return Action.HIGH_BET
+                elif Action.CALL in validActions:
+                    return Action.CALL
+                elif Action.CHECK in validActions:
+                    return Action.CHECK
+                else:
+                    return Action.ALL_IN
+                    
+            elif policyRank == 4:
+                if Action.MID_BET in validActions:
+                    return Action.MID_BET
+                elif Action.CALL in validActions:
+                    return Action.CALL
+                elif Action.CHECK in validActions:
+                    return Action.CHECK
+                else:
+                    return Action.ALL_IN
+                    
+            elif policyRank == 5:
+                if Action.LOW_BET in validActions:
+                    return Action.LOW_BET
+                elif Action.CALL in validActions:
+                    return Action.CALL
+                elif Action.CHECK in validActions:
+                    return Action.CHECK
+                else:
+                    return Action.FOLD
+                    
+            elif policyRank == 6:
+                if Action.MIN_BET in validActions:
+                    return Action.MIN_BET
+                elif Action.CALL in validActions:
+                    return Action.CALL
+                elif Action.CHECK in validActions:
+                    return Action.CHECK
+                else:
+                    return Action.FOLD
+                    
+            elif policyRank == 7:
+                if Action.CALL in validActions:
+                    return Action.CALL
+                elif Action.CHECK in validActions:
+                    return Action.CHECK
+                else:
+                    return Action.FOLD
+                    
+            elif policyRank == 8:
+                if Action.CALL in validActions:
+                    return Action.CALL
+                elif Action.CHECK in validActions:
+                    return Action.CHECK
+                else:
+                    return Action.FOLD
+                
+            elif policyRank == 9:
+                return Action.FOLD
+                    
+            elif policyRank == 10:
+                return Action.FOLD
+                    
+            else:
+                return Action.FOLD
 
 
 

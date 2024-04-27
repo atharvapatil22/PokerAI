@@ -12,56 +12,9 @@ from math import sqrt, log, ceil
 class MonteCarloAgent(Agent):
 
     def get_action(self, board, validActions):
-        action = self.MONTE_CARLO_TREE_SEARCH(board, 200)
+        action = self.MONTE_CARLO_TREE_SEARCH(board, 100)
         # print(f"Monte Carlo Agent chose: {action}")
         return action
-        cards_in_hand = self.cardsInHand
-        community_cards = board.community
-        your_wins = 0
-        opponent_wins = 0
-        ties = 0
-        simulations = 1000
-        for _ in range(simulations):
-            deck = Deck(True, None)
-            for card_in_hand in cards_in_hand:
-                for card in deck.cards:
-                    if str(card) == str(card_in_hand):
-                        deck.cards.remove(card)
-                        break
-            # print(len(deck.cards))
-            opponent_hand = [deck.top(), deck.top()] + community_cards
-            hand = cards_in_hand + community_cards
-            randomized_community_cards = []
-            for _ in range(5-len(community_cards)):
-                randomized_community_cards.append(deck.top())
-            opponent_hand += randomized_community_cards
-            hand += randomized_community_cards
-            hand_score = MonteCarloAgent.handScore(hand)
-            opponent_score = MonteCarloAgent.handScore(opponent_hand)
-            if hand_score > opponent_score:
-                your_wins +=1
-            elif hand_score == opponent_score:
-                ties +=1
-            else:
-                opponent_wins +=1
-        your_win_percentage = your_wins/(simulations-ties)        
-        # print(f"Your win percentage:", your_win_percentage)
-        # print(f"Opponent win percentage:", opponent_wins/(simulations-ties))
-        if(your_win_percentage > 0.6):
-            if(Action.MID_BET in validActions):
-                return Action.MID_BET
-            elif(Action.HIGH_BET in validActions):
-                return Action.HIGH_BET
-            else:
-                return Action.ALL_IN
-        elif(your_win_percentage > 0.4):
-            if(Action.CHECK in validActions):
-                return Action.CHECK
-            return Action.CALL
-        else:
-            return Action.FOLD
-        
-    
     
     class MCTree:
 
@@ -322,7 +275,6 @@ class MonteCarloAgent(Agent):
                 # print("SOMETHING WENT WRONG!")
                 # The leaf to return is an end state, just simulate the leaf.
                 return leaf
-            
             newBoard = copy.deepcopy(leaf.board)
             randomActionIdx = -1
             if newBoard.playersFolding[newBoard.activePlayerIndex] or newBoard.playersAllIn[newBoard.activePlayerIndex]:
@@ -433,11 +385,11 @@ class MonteCarloAgent(Agent):
                 ourChips = simulatedBoard.players[simulatedBoard.activePlayerIndex].chips
                 
                 availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
-                action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions)
+                # action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimple(self, simulatedBoard, availableSimActions)
-                # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
+                action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpAdj(self, simulatedBoard, availableSimActions)
-
+                
                 # get random action
                 # randomActionIdx = randrange(availableSimActions.__len__())
                 # action = availableSimActions[randomActionIdx]
@@ -541,10 +493,11 @@ class MonteCarloAgent(Agent):
                 return 0
             elif winningIndex[0] == simulatedIndex:
                 # Player who made choice resulting in node, won
-                return (simulatedBoard.pot / 2)
+                return (simulatedBoard.pot - simulatedBoard.playerBets[winningIndex[0]])
             else:
+                losing_index = (winningIndex[0] + 1) % 2
                 # Player who made choice resulting in node, lost
-                return -(simulatedBoard.pot / 2)
+                return -(simulatedBoard.playerBets[losing_index])
 
             
 
@@ -702,12 +655,15 @@ class MonteCarloAgent(Agent):
             # TODO: Make the result propagate as well, storing amount of money won/lost
             # NOTE: The above TODO relies on functionality in the MCNode class that does not yet exist
             # print("Result: " + str(result))
+            
             if result > 0:
                 simNode.wins += 1
                 simNode.chipsWon += result
                 simNode.chipsWonSqrt += sqrt(result)
             elif result < 0:
                 simNode.losses += 1
+                simNode.chipsWon += result
+                simNode.chipsWonSqrt -= sqrt(abs(result))
             else:
                 simNode.ties += 1
                 simNode.chipsWon += result
@@ -994,7 +950,6 @@ class MonteCarloAgent(Agent):
             else:
                 return Action.FOLD
             
-
         def getPlayoutPolicyActionSimpAdj(self, board, validActions):
             cards_in_hand = board.players[board.activePlayerIndex].cardsInHand
             community_cards = self.root.board.community
@@ -1101,11 +1056,6 @@ class MonteCarloAgent(Agent):
                     
             else:
                 return Action.FOLD
-            
-
-
-
-
 
 
 
@@ -1436,7 +1386,7 @@ class MonteCarloAgent(Agent):
 
         
     
-
+    
     def MONTE_CARLO_TREE_SEARCH(self, board, numSim):
         # TODO: follow pseudocode
         tree = MonteCarloAgent.MCTree(board)
@@ -1459,6 +1409,7 @@ class MonteCarloAgent(Agent):
                 maxNumPlayouts = numPlayouts
                 chosenNode = node
         chosenAction = chosenNode.playerAction
+        # print("Chosen Action: " + str(chosenAction))
         return chosenAction
 
 

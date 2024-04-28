@@ -12,8 +12,20 @@ from math import sqrt, log, ceil
 class MonteCarloAgent(Agent):
 
     def get_action(self, board, validActions):
-        action = self.MONTE_CARLO_TREE_SEARCH(board, 100)
+        # Store the record of each player in the existing player objects, clear them, make copies, then restore them.
+        #   This is done to ensure that the record is not modified in the new board.
+        playerRecords = []
+        for i in range(board.players.__len__()):
+            playerRecords.append(board.players[i].chipRecord)
+            board.players[i].chipRecord = []
+        
+        
+        action = self.MONTE_CARLO_TREE_SEARCH(board, 200)
         # print(f"Monte Carlo Agent chose: {action}")
+
+        for i in range(board.players.__len__()):
+            board.players[i].chipRecord = playerRecords[i]
+
         return action
     
     class MCTree:
@@ -275,13 +287,19 @@ class MonteCarloAgent(Agent):
                 # print("SOMETHING WENT WRONG!")
                 # The leaf to return is an end state, just simulate the leaf.
                 return leaf
+
             newBoard = copy.deepcopy(leaf.board)
+
             randomActionIdx = -1
             if newBoard.playersFolding[newBoard.activePlayerIndex] or newBoard.playersAllIn[newBoard.activePlayerIndex]:
                 newBoard.playersPassing[newBoard.activePlayerIndex] = True
             else:
 
-                randomActionIdx = randrange(leaf.availableActions.__len__())
+                suggestedAction = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, newBoard, leaf.availableActions)
+                if suggestedAction in leaf.availableActions:
+                    randomActionIdx = leaf.availableActions.index(suggestedAction)
+                else:
+                    randomActionIdx = randrange(leaf.availableActions.__len__())
                 randomAction = leaf.availableActions[randomActionIdx]
                 # TODO: Perform the action on newBoard!!!
                 # NOTE: This can likely be done by copying some methods from round, making them static, and then using them.
@@ -878,6 +896,8 @@ class MonteCarloAgent(Agent):
             elif policyRank == 2:
                 if Action.HIGH_BET in validActions:
                     return Action.HIGH_BET
+                elif Action.OP_MAX in validActions:
+                    return Action.OP_MAX
                 elif Action.CALL in validActions:
                     return Action.CALL
                 elif Action.CHECK in validActions:
@@ -888,6 +908,8 @@ class MonteCarloAgent(Agent):
             elif policyRank == 3:
                 if Action.MID_BET in validActions:
                     return Action.MID_BET
+                elif Action.OP_MAX in validActions:
+                    return Action.OP_MAX
                 elif Action.CALL in validActions:
                     return Action.CALL
                 elif Action.CHECK in validActions:
@@ -898,6 +920,8 @@ class MonteCarloAgent(Agent):
             elif policyRank == 4:
                 if Action.LOW_BET in validActions:
                     return Action.LOW_BET
+                elif Action.OP_MAX in validActions:
+                    return Action.OP_MAX
                 elif Action.CALL in validActions:
                     return Action.CALL
                 elif Action.CHECK in validActions:
@@ -908,6 +932,8 @@ class MonteCarloAgent(Agent):
             elif policyRank == 5:
                 if Action.LOW_BET in validActions:
                     return Action.LOW_BET
+                elif Action.OP_MAX in validActions:
+                    return Action.OP_MAX
                 elif Action.CALL in validActions:
                     return Action.CALL
                 elif Action.CHECK in validActions:
@@ -918,6 +944,8 @@ class MonteCarloAgent(Agent):
             elif policyRank == 6:
                 if Action.MIN_BET in validActions:
                     return Action.MIN_BET
+                elif Action.OP_MAX in validActions:
+                    return Action.OP_MAX
                 elif Action.CALL in validActions:
                     return Action.CALL
                 elif Action.CHECK in validActions:
@@ -1132,21 +1160,32 @@ class MonteCarloAgent(Agent):
                 # 5% all in, 20% high bet, 30% mid bet, 40% low bet, 0% min bet, 5% call/check, 0% fold
                 randNum = randrange(1,100)
                 if randNum <= 5:
-                    if Action.ALL_IN in validActions:
+                    if Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    elif Action.ALL_IN in validActions:
                         return Action.ALL_IN
-                if randNum <= 25:
+                elif randNum <= 25:
                     if Action.HIGH_BET in validActions:
                         return Action.HIGH_BET
-                    randNum += 20
-                if randNum <= 55:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                elif randNum <= 55:
                     if Action.MID_BET in validActions:
                         return Action.MID_BET
-                    randNum += 30
-                if randNum <= 95:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                elif randNum <= 95:
                     if Action.LOW_BET in validActions:
                         return Action.LOW_BET
-                    randNum += 40
-                if randNum <= 100:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                if randNum > 95:
                     if Action.CALL in validActions:
                         return Action.CALL
                     elif Action.CHECK in validActions:
@@ -1159,25 +1198,39 @@ class MonteCarloAgent(Agent):
                 # 5% all in, 5% high bet, 30% mid bet, 40% low bet, 15% min bet, 5% call/check, 0% fold
                 randNum = randrange(1,100)
                 if randNum <= 5:
-                    if Action.ALL_IN in validActions:
+                    if Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    elif Action.ALL_IN in validActions:
                         return Action.ALL_IN
                 if randNum <= 10:
                     if Action.HIGH_BET in validActions:
                         return Action.HIGH_BET
-                    randNum += 5
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
                 if randNum <= 40:
                     if Action.MID_BET in validActions:
                         return Action.MID_BET
-                    randNum += 30
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
                 if randNum <= 80:
                     if Action.LOW_BET in validActions:
                         return Action.LOW_BET
-                    randNum += 40
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
                 if randNum <= 95:
                     if Action.MIN_BET in validActions:
                         return Action.MIN_BET
-                    randNum += 15
-                if randNum <= 100:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                if randNum > 95:
                     if Action.CALL in validActions:
                         return Action.CALL
                     elif Action.CHECK in validActions:
@@ -1192,20 +1245,32 @@ class MonteCarloAgent(Agent):
                 if randNum <= 5:
                     if Action.HIGH_BET in validActions:
                         return Action.HIGH_BET
-                    randNum += 5
-                if randNum <= 20:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                elif randNum <= 20:
                     if Action.MID_BET in validActions:
                         return Action.MID_BET
-                    randNum += 15
-                if randNum <= 40:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                elif randNum <= 45:
                     if Action.LOW_BET in validActions:
                         return Action.LOW_BET
-                    randNum += 25
-                if randNum <= 80:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                elif randNum <= 85:
                     if Action.MIN_BET in validActions:
                         return Action.MIN_BET
-                    randNum += 40
-                if randNum <= 95:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                if randNum > 85:
                     if Action.CALL in validActions:
                         return Action.CALL
                     elif Action.CHECK in validActions:
@@ -1220,16 +1285,25 @@ class MonteCarloAgent(Agent):
                 if randNum <= 5:
                     if Action.MID_BET in validActions:
                         return Action.MID_BET
-                    randNum += 5
-                if randNum <= 20:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                elif randNum <= 20:
                     if Action.LOW_BET in validActions:
                         return Action.LOW_BET
-                    randNum += 15
-                if randNum <= 60:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                elif randNum <= 60:
                     if Action.MIN_BET in validActions:
                         return Action.MIN_BET
-                    randNum += 40
-                if randNum <= 100:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                if randNum > 60:
                     if Action.CALL in validActions:
                         return Action.CALL
                     elif Action.CHECK in validActions:
@@ -1244,12 +1318,18 @@ class MonteCarloAgent(Agent):
                 if randNum <= 5:
                     if Action.LOW_BET in validActions:
                         return Action.LOW_BET
-                    randNum += 5
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
                 if randNum <= 35:
                     if Action.MIN_BET in validActions:
                         return Action.MIN_BET
-                    randNum += 30
-                if randNum <= 100:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                if randNum > 35:
                     if Action.CALL in validActions:
                         return Action.CALL
                     elif Action.CHECK in validActions:
@@ -1259,13 +1339,16 @@ class MonteCarloAgent(Agent):
                     
             elif policyRank == 6:
                 # Very weak hand
-                # 0% all in, 0% high bet, 0% mid bet, 0% low bet, 20% min bet, 75% call/check, 0% fold
+                # 0% all in, 0% high bet, 0% mid bet, 0% low bet, 20% min bet, 80% call/check, 0% fold
                 randNum = randrange(1,100)
                 if randNum <= 20:
                     if Action.MIN_BET in validActions:
                         return Action.MIN_BET
-                    randNum += 20
-                if randNum <= 100:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                if randNum > 20:
                     if Action.CALL in validActions:
                         return Action.CALL
                     elif Action.CHECK in validActions:
@@ -1280,8 +1363,11 @@ class MonteCarloAgent(Agent):
                 if randNum <= 5:
                     if Action.MIN_BET in validActions:
                         return Action.MIN_BET
-                    randNum += 5
-                if randNum <= 100:
+                    elif Action.OP_MAX in validActions:
+                        return Action.OP_MAX
+                    else:
+                        randNum = 100
+                if randNum > 5:
                     if Action.CALL in validActions:
                         return Action.CALL
                     elif Action.CHECK in validActions:
@@ -1404,6 +1490,7 @@ class MonteCarloAgent(Agent):
             node = tree.root.children[i]
             numPlayouts = MonteCarloAgent.MCTree.N(node)
             # numPlayouts = MonteCarloAgent.MCTree.U(node) / MonteCarloAgent.MCTree.N(node)
+            # numPlayouts = MonteCarloAgent.MCTree.U(node)
             # print("Node: " + str(node.playerAction) + " Playouts: " + str(MonteCarloAgent.MCTree.N(node)) + " U: " + str(MonteCarloAgent.MCTree.U(node)))
             if maxNumPlayouts is None or numPlayouts > maxNumPlayouts or (numPlayouts == maxNumPlayouts and MonteCarloAgent.MCTree.U(node) > MonteCarloAgent.MCTree.U(chosenNode)):
                 maxNumPlayouts = numPlayouts

@@ -67,11 +67,19 @@ class TestPoker:
             # print("poker instance with players: ", self.players)
             pokerInstance = Poker(self.players, self.startChips, self.minBet, False, self.pokerGameDeckSequences[i], supressOutput=True)
             winner = pokerInstance.runGame()
-            if winner[0].id == self.players[0].id:
-                p1_wins += 1
-            else:
-                p2_wins += 1
             print(f"Game {i} complete")
+            if winner.__len__() > 1 and (winner[1].chips > winner[0].chips):
+                if winner[1].id == self.players[0].id:
+                    p1_wins += 1
+                else:
+                    p2_wins += 1
+                winner = [winner[1]]
+            else:
+                if winner[0].id == self.players[0].id:
+                    p1_wins += 1
+                else:
+                    p2_wins += 1
+            
             print(f"Winner was player {winner[0].id}")
             # Handle new information about players here if necessary
         print(f"Player 1 win percentage: {p1_wins / self.pokerGameDeckSequences.__len__()}")
@@ -117,9 +125,9 @@ test = TestPoker(100, 2)
 # test.addCallAgent()
 # test.addCallAgent()
 # test.addCallAgent()
-test.addSimulationAgent()
+# test.addSimulationAgent()
 
-# test.addSimpleProbabilityAgent()
+test.addSimpleProbabilityAgent()
 test.addMonteAgent()
 
 

@@ -120,7 +120,8 @@ class MinimaxAgent(Agent):
             new_gs = self.getUpdatedGameState(game_state,ac,0)
             v2,a2 = self.min_value(new_gs,level+1)
             if v2>v:
-                v,action = v2, a2
+                v,action = v2,ac
+        print("final update for MAX",v,action)
         return v,action
   
     def min_value(self,game_state,level):
@@ -141,20 +142,21 @@ class MinimaxAgent(Agent):
             v2,a2 = self.max_value(new_gs,level+1)
             if v2 < v:
                 v = v2
-                action = a2
+                action = ac
+        print("final update for MIN",v,action)
         return v,action
   
     # In the current implementation, Minimax search is using a different representation of the board called game state. 
     # This function should be removed later and code should be refactored to have same representation between engine and agents
     def make_game_state_from_board(self,board):
         game_state ={}
-        game_state['pot'] = board.pot
-        game_state['currentBet'] = board.currentBet
-        game_state['community'] = board.community
+        game_state['pot'] = board['pot']
+        game_state['currentBet'] = board['currentBet']
+        game_state['community'] = board['community']
         game_state['players'] = []
-        game_state['minBet'] = board.minBet
-        for i in range(board.players.__len__()):
-            game_state['players'] .append({'bet':board.playerBets[i],'chipsRemaining':board.players[i].chips,'acted':board.playersPassing[i]})
+        game_state['minBet'] = board['minBet']
+        for i in range(board['players'].__len__()):
+            game_state['players'] .append({'bet':board['playerBets'][i],'chipsRemaining':board['players'][i]['chips'],'acted':board['playersPassing'][i]})
 
         return game_state
   
@@ -168,8 +170,7 @@ class MinimaxAgent(Agent):
 
         # NOTE: Current implementation of search will only search till the end of current phase.
         res = self.minimax_search(game_state)
-        print("You should take this action",res)
-        return 
+        return res
     
     def hand_strength(self, community, cardsInHand):
         # Open the text file and read the data

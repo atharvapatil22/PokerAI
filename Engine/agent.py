@@ -73,17 +73,18 @@ class Agent(Player):
         # val takes on values 2 through 14 (2 through Ace)
         for i in range(13):
             val = i + 2
-            if vals.count(val) == 4:
+            val_count = vals.count(val)
+            if val_count == 4:
                 FOUR_KIND = True
                 FOUR_KIND_VAL = val
-            elif vals.count(val) == 3:
+            elif val_count == 3:
                 if THREE_KIND == True:
                     THREE_KIND_SECONDARY = THREE_KIND_VAL
                     THREE_KIND_VAL = val
                 else:
                     THREE_KIND = True
                     THREE_KIND_VAL = val
-            elif vals.count(val) == 2:
+            elif val_count == 2:
                 # If two pairs have already been detected, shift the values down
                 if TWO_PAIRS:
                     # Two kind val becomes the old two pairs high val
@@ -140,9 +141,11 @@ class Agent(Player):
         for i in range(12):
             # Look at two cards at a time
             # j is the first (lower)
-            j = i % 7
+            # j = i % 7
+            j = i % vals.__len__()
             # h is the second (higher)
-            h = (i + 1) % 7
+            # h = (i + 1) % 7
+            h = (i + 1) % vals.__len__()
             # initialize diff
             diff = 0
             # If our FIRST card is an ace, treat it like a 1
@@ -193,7 +196,7 @@ class Agent(Player):
         flushCards = []
         # Only calculate if a flush is present
         if FLUSH:
-            for i in range(7):
+            for i in range(cards.__len__()):
                 if cards[i].suit == FLUSH_SUIT:
                     # cards.pop(i)
                     flushCards.append(cards[i])

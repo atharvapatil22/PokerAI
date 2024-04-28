@@ -5,6 +5,7 @@ import math
 import collections
 from agent import Agent
 from player import Action,BetRatio
+from CONSTANTS import Preflop_Handscores
 
 # This agent can only handle 2player poker. It will have to be modified for multiplayer games.
 class MinimaxAgent(Agent):
@@ -173,28 +174,18 @@ class MinimaxAgent(Agent):
         return res
     
     def hand_strength(self, community, cardsInHand):
-        # Open the text file and read the data
-        if len(community) == 0:
-            file_path = "hand_strength.txt"  # Change this to the path of your text file
-            with open(file_path, 'r') as file:
-                data = file.read()
 
-            # Splitting the data into lines and then into hole and rank
-            lines = data.strip().split('\n')
-            hole_rank_map = {}
-            
-            for line in lines:
-                rank, hole = line.split('|')
-                hole = tuple(map(int, hole.strip().split(',')))
-                rank = int(rank.strip())
-                rank = 169 - rank * (100/169)
-                hole_rank_map[hole] = rank
-            cards = tuple((cardsInHand[0].value, cardsInHand[1].value))
-            if cards in hole_rank_map:
-                currRank = hole_rank_map[cards]
-                return currRank
-            else:
-                return 0
+        # For pre-flop phase
+        if len(community) == 0:
+            handCard1 = cardsInHand[0].value
+            handCard2 = cardsInHand[1].value
+            for key,val in Preflop_Handscores.items():
+                c1,c2 = key
+                if( (c1==handCard1 and c2==handCard2) or (c1==handCard2 and c2==handCard1)):
+                    return val
+            return 0
+        
+        # For Flop,Turn,River phases
         else:
             totalCards = community + cardsInHand
             combinations = list(itertools.combinations(totalCards, 5))

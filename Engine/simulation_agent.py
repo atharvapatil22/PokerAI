@@ -46,10 +46,13 @@ class SimulationAgent(Agent):
                     return Action.CALL
                 return Action.ALL_IN
             if(Action.MID_BET in validActions):
+                random2 = rnd.random()
+                if(Action.HIGH_BET in validActions and random2 < 0.5): # 50/50 on high or mid bet
+                    return Action.HIGH_BET
                 return Action.MID_BET
-            elif(Action.HIGH_BET in validActions):
-                return Action.HIGH_BET
             else:
+                if(Action.OP_MAX in validActions):
+                    return Action.OP_MAX
                 return Action.ALL_IN
         if(your_win_percentage > 0.5): # pretty good hand
             if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
@@ -59,17 +62,21 @@ class SimulationAgent(Agent):
                     return Action.CALL
                 return Action.ALL_IN
             if(Action.MIN_BET in validActions):
+                random2 = rnd.random()
+                if(Action.LOW_BET in validActions and random2 < 0.5): # 50/50 on low or min bet
+                    return Action.LOW_BET
                 return Action.MIN_BET
-            elif(Action.LOW_BET in validActions):
-                return Action.LOW_BET
             else:
+                if(Action.OP_MAX in validActions):
+                    return Action.OP_MAX
                 return Action.ALL_IN
         elif(your_win_percentage > 0.4): # mid hand
             if(random_number < 0.3): # some randomness, 30% chance of being aggressive with a mid hand
                 if(Action.MID_BET in validActions):
+                    random2 = rnd.random()
+                    if(Action.HIGH_BET in validActions and random2 < 0.5): # 50/50 on high or mid bet
+                        return Action.HIGH_BET
                     return Action.MID_BET
-                elif(Action.HIGH_BET in validActions):
-                    return Action.HIGH_BET
                 else:
                     return Action.ALL_IN
             if(Action.CHECK in validActions):

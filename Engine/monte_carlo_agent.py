@@ -403,9 +403,9 @@ class MonteCarloAgent(Agent):
                 ourChips = simulatedBoard.players[simulatedBoard.activePlayerIndex].chips
                 
                 availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
-                # action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions)
+                action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimple(self, simulatedBoard, availableSimActions)
-                action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
+                # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpAdj(self, simulatedBoard, availableSimActions)
                 
                 # get random action
@@ -756,6 +756,9 @@ class MonteCarloAgent(Agent):
             
             return validActions
         
+
+        # This can either be 30 full simulations to determine winrate against the opponent
+        # OR do 5 simulations of your hand to get an average hand score
         def getPlayoutPolicyAction(self, board, validActions):
             cards_in_hand = board.players[self.agentIndex].cardsInHand
             community_cards = self.root.board.community
@@ -763,7 +766,7 @@ class MonteCarloAgent(Agent):
             your_wins = 0
             opponent_wins = 0
             ties = 0
-            simulations = 30
+            simulations = 5
             total_hand_score = 0
             deck = Deck(True, None)
             for card_to_remove in cards_to_remove:
@@ -784,21 +787,21 @@ class MonteCarloAgent(Agent):
                 hand += randomized_community_cards
                 hand_score = MonteCarloAgent.handScore(hand)
                 total_hand_score += hand_score
-                opponent_score = MonteCarloAgent.handScore(opponent_hand)
-                if hand_score > opponent_score:
-                    your_wins +=1
-                elif hand_score == opponent_score:
-                    ties +=1
-                else:
-                    opponent_wins +=1
+                # opponent_score = MonteCarloAgent.handScore(opponent_hand)
+                # if hand_score > opponent_score:
+                #     your_wins +=1
+                # elif hand_score == opponent_score:
+                #     ties +=1
+                # else:
+                #     opponent_wins +=1
             your_win_percentage = (your_wins+0.5*ties)/(simulations)
             import random as rnd
             random_number = rnd.random()
             average_hand_score = total_hand_score/simulations
             # print("Average hand score: ", average_hand_score)
             # print("Average hand score: ", average_hand_score)
-            # if(average_hand_score > 250):
-            if(your_win_percentage > 0.6):
+            if(average_hand_score > 250):
+            # if(your_win_percentage > 0.6):
                 if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                     if(Action.CHECK in validActions):
                         return Action.CHECK
@@ -806,12 +809,16 @@ class MonteCarloAgent(Agent):
                         return Action.CALL
                     return Action.ALL_IN
                 if(Action.MID_BET in validActions):
+                    random2 = rnd.random()
+                    if(Action.HIGH_BET in validActions and random2 < 0.5): # 50/50 on high or mid bet
+                        return Action.HIGH_BET
                     return Action.MID_BET
-                elif(Action.HIGH_BET in validActions):
-                    return Action.HIGH_BET
                 else:
+                    if(Action.OP_MAX in validActions):
+                        return Action.OP_MAX
                     return Action.ALL_IN
-            if(your_win_percentage > 0.5):
+            if(average_hand_score > 215):
+            # if(your_win_percentage > 0.5):
                 if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                     if(Action.CHECK in validActions):
                         return Action.CHECK
@@ -819,18 +826,22 @@ class MonteCarloAgent(Agent):
                         return Action.CALL
                     return Action.ALL_IN
                 if(Action.MIN_BET in validActions):
+                    random2 = rnd.random()
+                    if(Action.LOW_BET in validActions and random2 < 0.5): # 50/50 on low or min bet
+                        return Action.LOW_BET
                     return Action.MIN_BET
-                elif(Action.LOW_BET in validActions):
-                    return Action.LOW_BET
                 else:
+                    if(Action.OP_MAX in validActions):
+                        return Action.OP_MAX
                     return Action.ALL_IN
-            # elif(average_hand_score > 180):
-            elif(your_win_percentage > 0.4):
+            elif(average_hand_score > 180):
+            # elif(your_win_percentage > 0.4):
                 if(random_number < 0.3): # some randomness, 30% chance of being aggressive with a mid hand
                     if(Action.MID_BET in validActions):
+                        random2 = rnd.random()
+                        if(Action.HIGH_BET in validActions and random2 < 0.5): # 50/50 on high or mid bet
+                            return Action.HIGH_BET
                         return Action.MID_BET
-                    elif(Action.HIGH_BET in validActions):
-                        return Action.HIGH_BET
                     else:
                         return Action.ALL_IN
                 if(Action.CHECK in validActions):
@@ -838,7 +849,7 @@ class MonteCarloAgent(Agent):
                 elif(Action.CALL in validActions):
                     return Action.CALL
                 return Action.ALL_IN
-            else:
+            else: # bad hand
                 return Action.FOLD
 
         # Create a dictionary for every off suit pair of cards, and a rank of the hand

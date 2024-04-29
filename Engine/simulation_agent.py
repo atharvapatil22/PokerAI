@@ -38,18 +38,33 @@ class SimulationAgent(Agent):
         your_win_percentage = (your_wins+0.5*ties)/(simulations)
         import random as rnd
         random_number = rnd.random() # Leaving this in here but the randomness made it WAY worse (75% vs 40% win rate)
-        if(your_win_percentage > 0.6):
+        if(your_win_percentage > 0.6): # very good hand
             if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                 if(Action.CHECK in validActions):
                     return Action.CHECK
-                return Action.CALL
+                elif(Action.CALL in validActions):
+                    return Action.CALL
+                return Action.ALL_IN
             if(Action.MID_BET in validActions):
                 return Action.MID_BET
             elif(Action.HIGH_BET in validActions):
                 return Action.HIGH_BET
             else:
                 return Action.ALL_IN
-        elif(your_win_percentage > 0.4):
+        if(your_win_percentage > 0.5): # pretty good hand
+            if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
+                if(Action.CHECK in validActions):
+                    return Action.CHECK
+                elif(Action.CALL in validActions):
+                    return Action.CALL
+                return Action.ALL_IN
+            if(Action.MIN_BET in validActions):
+                return Action.MIN_BET
+            elif(Action.LOW_BET in validActions):
+                return Action.LOW_BET
+            else:
+                return Action.ALL_IN
+        elif(your_win_percentage > 0.4): # mid hand
             if(random_number < 0.3): # some randomness, 30% chance of being aggressive with a mid hand
                 if(Action.MID_BET in validActions):
                     return Action.MID_BET
@@ -59,6 +74,8 @@ class SimulationAgent(Agent):
                     return Action.ALL_IN
             if(Action.CHECK in validActions):
                 return Action.CHECK
-            return Action.CALL
-        else:
+            elif(Action.CALL in validActions):
+                return Action.CALL
+            return Action.ALL_IN
+        else: # bad hand
             return Action.FOLD

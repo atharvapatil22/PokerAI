@@ -802,11 +802,26 @@ class MonteCarloAgent(Agent):
                 if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                     if(Action.CHECK in validActions):
                         return Action.CHECK
-                    return Action.CALL
+                    elif(Action.CALL in validActions):
+                        return Action.CALL
+                    return Action.ALL_IN
                 if(Action.MID_BET in validActions):
                     return Action.MID_BET
                 elif(Action.HIGH_BET in validActions):
                     return Action.HIGH_BET
+                else:
+                    return Action.ALL_IN
+            if(your_win_percentage > 0.5):
+                if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
+                    if(Action.CHECK in validActions):
+                        return Action.CHECK
+                    elif(Action.CALL in validActions):
+                        return Action.CALL
+                    return Action.ALL_IN
+                if(Action.MIN_BET in validActions):
+                    return Action.MIN_BET
+                elif(Action.LOW_BET in validActions):
+                    return Action.LOW_BET
                 else:
                     return Action.ALL_IN
             # elif(average_hand_score > 180):
@@ -820,7 +835,9 @@ class MonteCarloAgent(Agent):
                         return Action.ALL_IN
                 if(Action.CHECK in validActions):
                     return Action.CHECK
-                return Action.CALL
+                elif(Action.CALL in validActions):
+                    return Action.CALL
+                return Action.ALL_IN
             else:
                 return Action.FOLD
 

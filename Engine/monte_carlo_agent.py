@@ -20,7 +20,7 @@ class MonteCarloAgent(Agent):
             board.players[i].chipRecord = []
         
         
-        action = self.MONTE_CARLO_TREE_SEARCH(board, 200)
+        action = self.MONTE_CARLO_TREE_SEARCH(board, 100)
         # print(f"Monte Carlo Agent chose: {action}")
 
         for i in range(board.players.__len__()):
@@ -403,7 +403,7 @@ class MonteCarloAgent(Agent):
                 ourChips = simulatedBoard.players[simulatedBoard.activePlayerIndex].chips
                 
                 availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
-                action = MonteCarloAgent.MCTree.getPlayoutPolicyAction(self, simulatedBoard, availableSimActions)
+                action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimulation(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimple(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpAdj(self, simulatedBoard, availableSimActions)
@@ -759,13 +759,13 @@ class MonteCarloAgent(Agent):
 
         # This can either be 30 full simulations to determine winrate against the opponent
         # OR do 5 simulations of your hand to get an average hand score
-        def getPlayoutPolicyAction(self, board, validActions):
-            cards_in_hand = board.players[self.agentIndex].cardsInHand
+        def getPlayoutPolicyActionSimulation(self, board, validActions):
+            cards_in_hand = board.players[board.activePlayerIndex].cardsInHand
             community_cards = self.root.board.community
             cards_to_remove = cards_in_hand + community_cards
-            your_wins = 0
-            opponent_wins = 0
-            ties = 0
+            # your_wins = 0
+            # opponent_wins = 0
+            # ties = 0
             simulations = 5
             total_hand_score = 0
             deck = Deck(True, None)
@@ -778,12 +778,12 @@ class MonteCarloAgent(Agent):
             for _ in range(simulations):
                 deck.cards = original_cards.copy()
                 # print(len(deck.cards))
-                opponent_hand = [deck.top(), deck.top()] + community_cards
+                # opponent_hand = [deck.top(), deck.top()] + community_cards
                 hand = cards_in_hand + community_cards
                 randomized_community_cards = []
                 for _ in range(5-len(community_cards)):
                     randomized_community_cards.append(deck.top())
-                opponent_hand += randomized_community_cards
+                # opponent_hand += randomized_community_cards
                 hand += randomized_community_cards
                 hand_score = MonteCarloAgent.handScore(hand)
                 total_hand_score += hand_score
@@ -794,7 +794,7 @@ class MonteCarloAgent(Agent):
                 #     ties +=1
                 # else:
                 #     opponent_wins +=1
-            your_win_percentage = (your_wins+0.5*ties)/(simulations)
+            # your_win_percentage = (your_wins+0.5*ties)/(simulations)
             import random as rnd
             random_number = rnd.random()
             average_hand_score = total_hand_score/simulations

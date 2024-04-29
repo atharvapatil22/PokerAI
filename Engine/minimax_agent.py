@@ -91,9 +91,12 @@ class MinimaxAgent(Agent):
 
         # hand_score determines the score of the current hand
         hand_score = self.hand_strength(game_state['community'],self.cardsInHand)
+        if hand_score == None:
+            hand_score = 0
 
         # Calculate utility based on pot score and hand score
-        if abs(pot_score-hand_score):
+
+        if abs(pot_score-hand_score) < 10:
             return 95 - abs(pot_score-hand_score)
         elif hand_score > pot_score:
             return random.randint(55,85)
@@ -101,10 +104,10 @@ class MinimaxAgent(Agent):
             return random.randint(25,45)
 
     def minimax_search(self,game_state):
-        v,action = self.max_value(game_state,0)
+        v,action = self.max_value(game_state,0,[float('-inf'),float('inf')])
         return action
   
-    def max_value(self,game_state,level):
+    def max_value(self,game_state,level,alpha_beta):
         # If game-state marks the end of phase, return utility value
         if self.isPhaseOver(game_state) or level > 10:
             util = self.getUtility(game_state)
@@ -118,12 +121,22 @@ class MinimaxAgent(Agent):
 
         for ac in possibleActions:
             new_gs = self.getUpdatedGameState(game_state,ac,0)
-            v2,a2 = self.min_value(new_gs,level+1)
-            if v2>v:
-                v,action = v2,ac
+            v2,a2 = self.min_value(new_gs,level+1,alpha_beta)
+            
+            if v2 > v:
+                v = v2
+                action = ac
+
+            # prune if v >= Beta
+            if v>=alpha_beta[1]:
+                return v,action
+            # update Alpha
+            if v > alpha_beta[0]:
+                alpha_beta[0] = v
+
         return v,action
   
-    def min_value(self,game_state,level):
+    def min_value(self,game_state,level,alpha_beta):
         # If game-state marks the end of phase, return utility value
         if self.isPhaseOver(game_state) or level > 10:
             util = self.getUtility(game_state)
@@ -137,10 +150,17 @@ class MinimaxAgent(Agent):
 
         for ac in possibleActions:
             new_gs = self.getUpdatedGameState(game_state,ac,1)
-            v2,a2 = self.max_value(new_gs,level+1)
+            v2,a2 = self.max_value(new_gs,level+1,alpha_beta)
             if v2 < v:
                 v = v2
                 action = ac
+
+            # prune if v < Alpha
+            if v <= alpha_beta[0]:
+                return v,action
+            # update Beta
+            if v < alpha_beta[1]:
+                alpha_beta[1] = v
         return v,action
   
     # In the current implementation, Minimax search is using a different representation of the board called game state. 

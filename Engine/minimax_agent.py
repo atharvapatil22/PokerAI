@@ -106,58 +106,63 @@ class MinimaxAgent(Agent):
   
     def max_value(self,game_state,level):
         # If game-state marks the end of phase, return utility value
-        if self.isPhaseOver(game_state):
-            return self.getUtility(game_state), None
+        if self.isPhaseOver(game_state) or level > 10:
+            util = self.getUtility(game_state)
+            return util, None
         
         v = float('-inf')
         action = None
         
         # possible actions for maximizing player 
         possibleActions = self.possiblePlayerActions(game_state,0)
-        print("poz act",possibleActions)
+
         for ac in possibleActions:
-            print("\nlevel",level)
-            print("Player #0",ac)
             new_gs = self.getUpdatedGameState(game_state,ac,0)
             v2,a2 = self.min_value(new_gs,level+1)
             if v2>v:
                 v,action = v2,ac
-        print("final update for MAX",v,action)
         return v,action
   
     def min_value(self,game_state,level):
         # If game-state marks the end of phase, return utility value
-        if self.isPhaseOver(game_state):
-            return self.getUtility(game_state), None
+        if self.isPhaseOver(game_state) or level > 10:
+            util = self.getUtility(game_state)
+            return util, None
         
         v = float('inf')
         action = None
 
         # possible actions for minimizing player
         possibleActions = self.possiblePlayerActions(game_state,1)
-        print("poz act",possibleActions)
+
         for ac in possibleActions:
-            print("\nlevel",level)
-            print("Player #1",ac)
             new_gs = self.getUpdatedGameState(game_state,ac,1)
             v2,a2 = self.max_value(new_gs,level+1)
             if v2 < v:
                 v = v2
                 action = ac
-        print("final update for MIN",v,action)
         return v,action
   
     # In the current implementation, Minimax search is using a different representation of the board called game state. 
     # This function should be removed later and code should be refactored to have same representation between engine and agents
     def make_game_state_from_board(self,board):
         game_state ={}
-        game_state['pot'] = board['pot']
-        game_state['currentBet'] = board['currentBet']
-        game_state['community'] = board['community']
+        game_state['pot'] = board.pot
+        game_state['currentBet'] = board.currentBet
+        game_state['community'] = board.community
         game_state['players'] = []
-        game_state['minBet'] = board['minBet']
-        for i in range(board['players'].__len__()):
-            game_state['players'] .append({'bet':board['playerBets'][i],'chipsRemaining':board['players'][i]['chips'],'acted':board['playersPassing'][i]})
+        game_state['minBet'] = board.minBet
+        for i in range(board.players.__len__()):
+            game_state['players'].append({'bet':board.playerBets[i],'chipsRemaining':board.players[i].chips,'acted':board.playersPassing[i]})
+
+        # game_state ={}
+        # game_state['pot'] = board['pot']
+        # game_state['currentBet'] = board['currentBet']
+        # game_state['community'] = board['community']
+        # game_state['players'] = []
+        # game_state['minBet'] = board['minBet']
+        # for i in range(board['players'].__len__()):
+        #     game_state['players'].append({'bet':board['playerBets'][i],'chipsRemaining':board['players'][i]['chips'],'acted':board['playersPassing'][i]})
 
         return game_state
   
@@ -251,7 +256,7 @@ class MinimaxAgent(Agent):
                     return 0
     
     
-    def straight_flush(hand):
+    def is_straight_flush(self,hand):
         suits_set = set(card.suit for card in hand)
         if len(suits_set) == 1:
             for i in range(1, len(hand)):
@@ -259,7 +264,7 @@ class MinimaxAgent(Agent):
                     return False
             return True
         return False
-    def is_four_of_a_kind(hand):
+    def is_four_of_a_kind(self,hand):
         # Check for Four of a Kind logic
         rank_counts = [0] * 14
         for card in hand:
@@ -269,7 +274,7 @@ class MinimaxAgent(Agent):
                 return True, index 
         return False, -1
 
-    def is_full_house(hand):
+    def is_full_house(self,hand):
         # Check for Full House logic
         rank_counts = [0] * 14
         for card in hand:
@@ -281,19 +286,19 @@ class MinimaxAgent(Agent):
                         return True, idx
         return False, -1
 
-    def is_flush(hand):
+    def is_flush(self,hand):
         # Check for Flush logic
         suits_set = set(card.suit for card in hand)
         return len(suits_set) == 1
 
-    def is_straight(hand):
+    def is_straight(self,hand):
         # Check for Straight logic
         for i in range(1, len(hand)):
             if hand[i].value != hand[i-1].value + 1:
                 return False
         return True
 
-    def is_three_of_a_kind(hand):
+    def is_three_of_a_kind(self,hand):
         # Check for Three of a Kind logic
         rank_counts = [0] * 14
         for card in hand:
@@ -303,7 +308,7 @@ class MinimaxAgent(Agent):
                 return True, index 
         return False, -1
 
-    def is_two_pair(hand):
+    def is_two_pair(self,hand):
         # Check for Two Pair logic
         rank_counts = collections.Counter(card.value for card in hand)
         num_pairs = 0
@@ -312,7 +317,7 @@ class MinimaxAgent(Agent):
                 num_pairs += 1
         return num_pairs == 2
 
-    def is_one_pair(hand):
+    def is_one_pair(self,hand):
         # Check for One Pair logic
         rank_counts = [0] * 14
         for card in hand:
@@ -324,7 +329,11 @@ class MinimaxAgent(Agent):
                     
             
             
-    
+            
+# boardz = { "pot" :75 , "currentBet":50,"community":[Card(10,'Hearts'),Card(2,'Spades'),Card(7,'Spades')],'minBet':25,'playerBets':[25,50],'players':[{'chips':100},{'chips':100}],'playersPassing':[False,False]}  
+# temp = MinimaxAgent()
+# res = temp.get_action(boardz,None)
+# print("You should take this action",res)
 
 
 

@@ -1,6 +1,7 @@
 from player import Player
 from player import Action
 from agent import Agent
+import random
 
 class CallAgent(Agent):
 
@@ -11,5 +12,9 @@ class CallAgent(Agent):
         elif Action.CHECK in validActions:
             action = Action.CHECK
         else :
-            action = Action.ALL_IN
+            r = random.random()
+            if r < .5:
+                action = Action.FOLD
+            else:
+                action = Action.ALL_IN
         return action

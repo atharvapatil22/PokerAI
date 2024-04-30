@@ -530,7 +530,7 @@ class Poker:
         return self.players
 
 
-testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=True, deckSequences=None) #random decks
+# testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=True, deckSequences=None) #random decks
 
 # testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, decksequences='../Testing/test_sequences.txt')
 
@@ -540,5 +540,5 @@ testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet =
 
 # testGame = Poker([RealPlayer(1, 0), RealPlayer(2, 0)],startChips = 100, minBet = 2, shuffleFlag=False, decksequences="../Testing/test_sequencesRound3.txt") #feed 4 decks, 2 for each game example
 
-testGame.runGame()
+# testGame.runGame()
 

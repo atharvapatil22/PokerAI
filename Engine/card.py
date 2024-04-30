@@ -1,8 +1,11 @@
 class Card:
+    SUITS = ["Spades", "Clubs", "Diamonds", "Hearts"]
+
     def __init__(self, value, suit):
         self.value = value
         self.face = True if value > 10 else False
         self.suit = suit
+        self.id = self.value + self.SUITS.index(self.suit) * 13
 
     def __str__(self) -> str:
         temp = ""

@@ -4,7 +4,7 @@ from player import Action, BetRatio
 
 class Round:
     class Board:
-        def __init__(self,players,minBet):
+        def __init__(self,players,minBet,buttonPlayerIndex):
             self.pot = 0
             self.community = []
             self.playersPassing = []
@@ -19,6 +19,9 @@ class Round:
             #       This is risky, as it relies on consisent shallow copies to maintain data integrity,
             #       but in theory it should give us the info we need
             self.players = players
+            # NOTE: This extra state here is used to give the agents access to button position
+            #       It's used to allow the agents to know how to pass the button on simulation
+            self.buttonPlayerIndex = buttonPlayerIndex
 
             # NOTE: This extra state here could have redundancy removed by forcing round methods to rely on it
             #       Instead of the existing round state.
@@ -41,7 +44,7 @@ class Round:
         self.deck = deck
         self.minBet = minBet
         self.buttonPlayerIndex = buttonPlayerIndex
-        self.board = self.Board(players,self.minBet)
+        self.board = self.Board(players,self.minBet,buttonPlayerIndex)
         self.checkFlag = True
         self.supressOuptut = supressOutput
 
@@ -72,22 +75,29 @@ class Round:
         if self.players[int(opponentIdx)].chips == 0:
             # Opponent is already all in
             validActions.remove(Action.OP_MAX)
-            validActions.remove(Action.MIN_BET)
-            validActions.remove(Action.MID_BET)
-            validActions.remove(Action.HIGH_BET)
+            if Action.MIN_BET in validActions:
+                validActions.remove(Action.MIN_BET)
+            if Action.MID_BET in validActions:
+                validActions.remove(Action.MID_BET)
+            if Action.HIGH_BET in validActions:
+                validActions.remove(Action.HIGH_BET)
         if self.players[int(opponentIdx)].chips + incomingBet >= self.players[int(activePlayerIndex)].chips:
             # Not enough chips to overbet other player
-            validActions.remove(Action.OP_MAX)
+            if Action.OP_MAX in validActions:
+                validActions.remove(Action.OP_MAX)
         else:
             # These actions would now overbet the opponent max
             validActions.remove(Action.ALL_IN)
             opponentMax = self.players[int(opponentIdx)].chips
             if incomingBet + self.players[activePlayerIndex].chips * BetRatio.LOW_BET > opponentMax:
-                validActions.remove(Action.LOW_BET)
+                if Action.LOW_BET in validActions:
+                    validActions.remove(Action.LOW_BET)
             if incomingBet + self.players[activePlayerIndex].chips * BetRatio.MID_BET > opponentMax:
-                validActions.remove(Action.MID_BET)
+                if Action.MID_BET in validActions:
+                    validActions.remove(Action.MID_BET)
             if incomingBet + self.players[activePlayerIndex].chips * BetRatio.HIGH_BET > opponentMax:
-                validActions.remove(Action.HIGH_BET)
+                if Action.HIGH_BET in validActions:
+                    validActions.remove(Action.HIGH_BET)
         
         return validActions
 
@@ -352,9 +362,9 @@ class Round:
         for i in range(12):
             # Look at two cards at a time
             # j is the first (lower)
-            j = i % 7
+            j = i % vals.__len__()
             # h is the second (higher)
-            h = (i + 1) % 7
+            h = (i + 1) % vals.__len__()
             # initialize diff
             diff = 0
             # If our FIRST card is an ace, treat it like a 1
@@ -405,7 +415,7 @@ class Round:
         flushCards = []
         # Only calculate if a flush is present
         if FLUSH:
-            for i in range(7):
+            for i in range(cards.__len__()):
                 if cards[i].suit == FLUSH_SUIT:
                     # cards.pop(i)
                     flushCards.append(cards[i])

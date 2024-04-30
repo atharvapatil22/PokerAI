@@ -129,8 +129,11 @@ class MonteCarloAgent(Agent):
             board.playersPassing[board.activePlayerIndex] = True
             # Other players must respond to the bet
             for i in range(board.playersPassing.__len__()):
-                if i != board.activePlayerIndex:
-                    board.playersPassing[i] = False
+                if i == board.activePlayerIndex:
+                    continue
+                elif board.playersAllIn[i]:
+                    continue
+                board.playersPassing[i] = False
             
             # print(f"Players passing(IN BET): {self.board.playersPassing}")
 
@@ -170,6 +173,11 @@ class MonteCarloAgent(Agent):
             # If 
             if promptResponse:
                 # Other players must respond to the bet
+                
+                # Disable checking if enabled
+                if board.checkFlag:
+                    board.checkFlag = False
+
                 for i in range(board.playersPassing.__len__()):
                     if i == board.activePlayerIndex:
                         continue
@@ -182,12 +190,7 @@ class MonteCarloAgent(Agent):
             # Update the pot
             board.pot += board.players[board.activePlayerIndex].bet(playerBet)
 
-            # Disable checking if enabled
-            if board.checkFlag:
-                board.checkFlag = False
-                # Not needed after the Phase Change Logic Fix
-                # for i in range(self.board.playersPassing.__len__()):
-                #     self.board.playersPassing[i] = False
+            
 
             board.playersAllIn[board.activePlayerIndex] = True
 
@@ -206,8 +209,11 @@ class MonteCarloAgent(Agent):
             board.playersPassing[board.activePlayerIndex] = True
             # Other players must respond to the bet
             for i in range(board.playersPassing.__len__()):
-                if i != board.activePlayerIndex:
-                    board.playersPassing[i] = False
+                if i == board.activePlayerIndex:
+                    continue
+                elif board.playersAllIn[i]:
+                    continue
+                board.playersPassing[i] = False
 
             # Update the current bet
             if board.playerBets[board.activePlayerIndex] > board.currentBet:

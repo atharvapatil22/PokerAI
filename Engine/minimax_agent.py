@@ -82,26 +82,84 @@ class MinimaxAgent(Agent):
             if player['acted']==False or (player['bet'] != game_state['currentBet'] and player['chipsRemaining']>0):
                 return False
         return True
+    
+    # Function will take a value in range and normalize it to a corresponding value in new range
+    def transformRange(self,old_value,old_range,new_range):
+        
+        # Extract values
+        old_min = old_range[0]
+        old_max = old_range[1]
+        new_min = new_range[0]
+        new_max = new_range[1]
+        
+        old_diff = (old_max - old_min)  
+        new_diff = (new_max - new_min)  
+
+        new_value = (((old_value - old_min) * new_diff) / old_diff) + new_min
+        
+        # Handle edge cases
+        if new_value<new_min:
+            new_value=new_min
+        elif new_value>new_max:
+            new_value=new_max
+        
+        return round(new_value,2)
 
     # Returns utility value for a leaf node:
     def getUtility(self,game_state):
-        # pot_score is a rating (0-100) which determines how high or low is the ammount in pot
-        pot_score = math.floor(game_state['pot']/game_state['minBet'])
+        # pot_score is a rating (0.1-100) which determines how high or low is the ammount in pot
+        pot_score = (game_state['minBet']/game_state['pot']) * 100
         if pot_score > 100: pot_score = 100
+        if pot_score < 0.1: pot_score = 0.1
 
-        # hand_score determines the score of the current hand
+        # hand_score determines the score of the current hand. This is a range (0.1-100)
         hand_score = self.hand_strength(game_state['community'],self.cardsInHand)
-        if hand_score == None:
-            hand_score = 0
+        if hand_score > 100: hand_score = 100
+        if hand_score < 0.1 or hand_score == None: hand_score = 0.1  
 
-        # Calculate utility based on pot score and hand score
+        product = hand_score * pot_score
 
-        if abs(pot_score-hand_score) < 10:
-            return 95 - abs(pot_score-hand_score)
-        elif hand_score > pot_score:
-            return random.randint(55,85)
-        elif hand_score < pot_score:
-            return random.randint(25,45)
+        # These ranges are hard-coded for desired agent behaviour
+        if hand_score > 66.0:
+            # HIGH hand | HIGH pot
+            if pot_score > 66.0:
+                product_range = [4356,10000]
+                utility_range = [60,100]
+            # HIGH hand | MED pot
+            elif pot_score > 33.0:
+                product_range = [2178,6600]
+                utility_range = [40,60]
+            # HIGH hand | LOW pot
+            else:
+                product_range = [6.6,3300]
+                utility_range = [0,40]
+        elif hand_score > 33.0:
+            # MED hand | HIGH pot
+            if pot_score > 66.0:
+                product_range = [2178,6600]
+                utility_range = [0,30]
+            # MED hand | MED pot
+            elif pot_score > 33.0:
+                product_range = [1089,4356]
+                utility_range = [60,100]
+            # MED hand | LOW pot
+            else:
+                product_range = [3.3,2178]
+                utility_range = [30,60]
+        else: 
+            # LOW hand | HIGH pot
+            if pot_score > 66.0:
+                product_range = [6.6,3300]
+                utility_range = [0,50]
+            # LOW hand | MED pot
+            elif pot_score > 33.0:
+                product_range = [3.3,2178]
+                utility_range = [50,80]
+            # LOW hand | LOW pot
+            else:
+                product_range = [0.01,1089]
+                utility_range = [80,100]
+        return self.transformRange(product,product_range,utility_range)
 
     def minimax_search(self,game_state):
         v,action = self.max_value(game_state,0,[float('-inf'),float('inf')])

@@ -10,6 +10,8 @@ from poker import Poker
 from player import Player
 from realPlayer import RealPlayer
 from call_agent import CallAgent
+from minimax_agent import MinimaxAgent
+
 from monte_carlo_agent import MonteCarloAgent
 from simulation_agent import SimulationAgent
 from simple_probability_agent import SimpleProbabilityAgent
@@ -101,6 +103,12 @@ class TestPoker:
         temp = CallAgent(self.playerIDCount, 0)
         self.players.append(temp)
         self.playerIDCount += 1
+    
+    def addMinMaxAgent(self):
+        temp = MinimaxAgent(self.playerIDCount, 0)
+        self.players.append(temp)
+        self.playerIDCount += 1
+
 
     def addMonteAgent(self):
         temp = MonteCarloAgent(self.playerIDCount, 0)
@@ -122,6 +130,8 @@ print("hello")
 test = TestPoker(100, 2)
 # test.addRealPlayer()
 # test.addRealPlayer()
+test.addMinMaxAgent()
+test.addCallAgent()
 # test.addCallAgent()
 # test.addCallAgent()
 # test.addCallAgent()

@@ -123,8 +123,11 @@ class Round:
         self.board.playersPassing[activePlayerIndex] = True
         # Other players must respond to the bet
         for i in range(self.board.playersPassing.__len__()):
-            if i != activePlayerIndex:
-                self.board.playersPassing[i] = False
+            if i == activePlayerIndex:
+                continue
+            elif self.board.playersAllIn[i]:
+                continue
+            self.board.playersPassing[i] = False
         
         # print(f"Players passing(IN BET): {self.board.playersPassing}")
 
@@ -163,6 +166,10 @@ class Round:
         self.board.playersPassing[activePlayerIndex] = True
         # If 
         if promptResponse:
+            # Disable checking if enabled
+            if self.checkFlag:
+                self.checkFlag = False
+                self.board.checkFlag = False
             # Other players must respond to the bet
             for i in range(self.board.playersPassing.__len__()):
                 if i == activePlayerIndex:
@@ -175,9 +182,9 @@ class Round:
         self.board.pot += self.players[activePlayerIndex].bet(playerBet)
 
         # Disable checking if enabled
-        if self.checkFlag:
-            self.checkFlag = False
-            self.board.checkFlag = False
+        # if self.checkFlag:
+        #     self.checkFlag = False
+        #     self.board.checkFlag = False
             # Not needed after the Phase Change Logic Fix
             # for i in range(self.board.playersPassing.__len__()):
             #     self.board.playersPassing[i] = False
@@ -197,8 +204,11 @@ class Round:
         self.board.playersPassing[activePlayerIndex] = True
         # Other players must respond to the bet
         for i in range(self.board.playersPassing.__len__()):
-            if i != activePlayerIndex:
-                self.board.playersPassing[i] = False
+            if i == activePlayerIndex:
+                continue
+            elif self.board.playersAllIn[i]:
+                continue
+            self.board.playersPassing[i] = False
 
         # Update the current bet
         if self.board.playerBets[activePlayerIndex] > self.board.currentBet:
@@ -596,7 +606,11 @@ class Round:
                 else:
                     self.board.activePlayerIndex = self.buttonPlayerIndex
 
-            
+            # If a player is out of chips
+            for i in range(self.players.__len__()):
+                if self.board.players[i].chips <= 0.0:
+                    self.board.playersAllIn[i] = True
+
             # If only one player is not folding or all-in, players are passing manditorily
             activePlayerCount = 0
             for i in range(self.players.__len__()):

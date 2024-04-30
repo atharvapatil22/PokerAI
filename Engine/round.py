@@ -638,7 +638,6 @@ class Round:
                 
                 # Get the choice of action from player object
                 action = self.players[self.board.activePlayerIndex].get_action(self.board,validActions)
-                # print(self.board.activePlayerIndex, ' chose ', action)
                
                 
                 # Also, currently actions are only accepted on the command line, perhaps a method in the

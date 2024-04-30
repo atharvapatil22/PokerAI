@@ -126,19 +126,18 @@ class TestPoker:
         self.playerIDCount += 1
 
 ###### DEFAULT OPTIONS:
-print("hello")
 test = TestPoker(100, 2)
 # test.addRealPlayer()
 # test.addRealPlayer()
-test.addMinMaxAgent()
-test.addCallAgent()
-# test.addCallAgent()
-# test.addCallAgent()
-# test.addCallAgent()
-# test.addSimulationAgent()
 
-test.addSimpleProbabilityAgent()
+# test.addCallAgent()
+# test.addCallAgent()
+# test.addCallAgent()
+# test.addCallAgent()
+test.addSimulationAgent()
 test.addMonteAgent()
+# test.addSimpleProbabilityAgent()
+# test.addMinMaxAgent()
 
 
 
@@ -146,7 +145,7 @@ test.addMonteAgent()
 
 # test.parseFile("../Testing/test_sequencesRound.txt")
 # test.parseFile("../Testing/test_sequencesRound3.txt")
-test.parseFile("../Testing/test_sequences.txt")
+test.parseFile("../Testing/test_sequences7.txt")
 print("running test")
 # test.runTest()
 import cProfile

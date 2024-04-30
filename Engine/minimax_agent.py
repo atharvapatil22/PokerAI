@@ -72,6 +72,8 @@ class MinimaxAgent(Agent):
             if (playerData['chipsRemaining'] * BetRatio.HIGH_BET) > incomingBet:
                 new_game_state['currentBet'] = playerData['bet']
             playerData['chipsRemaining'] -= (playerData['chipsRemaining'] * BetRatio.HIGH_BET)
+        
+        new_game_state['activePlayer'] = (new_game_state['activePlayer'] + 1) % 2
                 
         return new_game_state
   
@@ -176,10 +178,10 @@ class MinimaxAgent(Agent):
         action = None
         
         # possible actions for maximizing player 
-        possibleActions = self.possiblePlayerActions(game_state,0)
+        possibleActions = self.possiblePlayerActions(game_state, game_state['activePlayer'])
 
         for ac in possibleActions:
-            new_gs = self.getUpdatedGameState(game_state,ac,0)
+            new_gs = self.getUpdatedGameState(game_state,ac,game_state['activePlayer'])
             v2,a2 = self.min_value(new_gs,level+1,alpha_beta)
             
             if v2 > v:
@@ -205,10 +207,10 @@ class MinimaxAgent(Agent):
         action = None
 
         # possible actions for minimizing player
-        possibleActions = self.possiblePlayerActions(game_state,1)
+        possibleActions = self.possiblePlayerActions(game_state, game_state['activePlayer'])
 
         for ac in possibleActions:
-            new_gs = self.getUpdatedGameState(game_state,ac,1)
+            new_gs = self.getUpdatedGameState(game_state,ac, game_state['activePlayer'])
             v2,a2 = self.max_value(new_gs,level+1,alpha_beta)
             if v2 < v:
                 v = v2
@@ -230,6 +232,7 @@ class MinimaxAgent(Agent):
         game_state['currentBet'] = board.currentBet
         game_state['community'] = board.community
         game_state['players'] = []
+        game_state['activePlayer'] = board.activePlayerIndex
         game_state['minBet'] = board.minBet
         for i in range(board.players.__len__()):
             game_state['players'].append({'bet':board.playerBets[i],'chipsRemaining':board.players[i].chips,'acted':board.playersPassing[i]})

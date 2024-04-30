@@ -127,10 +127,10 @@ test.addCallAgent()
 # test.addCallAgent()
 # test.addCallAgent()
 # test.addCallAgent()
-test.addSimulationAgent()
+# test.addSimulationAgent()
 
 # test.addSimpleProbabilityAgent()
-test.addMonteAgent()
+# test.addMonteAgent()
 
 
 
@@ -138,7 +138,8 @@ test.addMonteAgent()
 
 # test.parseFile("../Testing/test_sequencesRound.txt")
 # test.parseFile("../Testing/test_sequencesRound3.txt")
-test.parseFile("../Testing/test_sequences.txt")
+test.parseFile("../Testing/test_sequences7.txt")
+# test.parseFile("../Testing/mmtestseq7game56.txt")
 print("running test")
 # test.runTest()
 import cProfile

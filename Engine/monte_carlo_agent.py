@@ -355,7 +355,7 @@ class MonteCarloAgent(Agent):
                 board.playersAllIn[i] = False
             return True
 
-        def SIMULATENEW(self, node):
+        def SIMULATE(self, node):
             simulatedBoard = copy.deepcopy(node.board)
 
             opponentIdx = (self.agentIndex + 1) % simulatedBoard.players.__len__()
@@ -403,14 +403,14 @@ class MonteCarloAgent(Agent):
                 ourChips = simulatedBoard.players[simulatedBoard.activePlayerIndex].chips
                 
                 availableSimActions = MonteCarloAgent.MCTree.getValidPlayerActions(self, simulatedBoard)
-                action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimulation(self, simulatedBoard, availableSimActions)
+                # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimulation(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimple(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpleProbability(self, simulatedBoard, availableSimActions)
                 # action = MonteCarloAgent.MCTree.getPlayoutPolicyActionSimpAdj(self, simulatedBoard, availableSimActions)
                 
                 # get random action
-                # randomActionIdx = randrange(availableSimActions.__len__())
-                # action = availableSimActions[randomActionIdx]
+                randomActionIdx = randrange(availableSimActions.__len__())
+                action = availableSimActions[randomActionIdx]
                 opponentChips = simulatedBoard.players[simulatedBoard.activePlayerIndex].chips
                 if (action == Action.LOW_BET and opponentChips < ourChips * BetRatio.LOW_BET or 
                     action == Action.MID_BET and opponentChips < ourChips * BetRatio.MID_BET or 
@@ -517,156 +517,6 @@ class MonteCarloAgent(Agent):
                 # Player who made choice resulting in node, lost
                 return -(simulatedBoard.playerBets[losing_index])
 
-            
-
-            
-        # Run a simulation on the given node
-        #   This is where a deck sequence is generated based off of what we know (board variable of node)
-        #   Return [amount], where amount is the amount won in the round. (positive is win) (0 is tie (two player game)) (negative is loss)
-        def SIMULATE(self, node):
-            simulatedNode = copy.deepcopy(node)
-            
-            # # reset board
-            # for i in range(simulatedNode.board.players.__len__()):
-            #     print(simulatedNode.board.playersPassing[i])
-            #     print(simulatedNode.board.playersFolding[i])
-            #     print(simulatedNode.board.playersAllIn[i])
-            #     simulatedNode.board.playersPassing[i] = False
-            #     simulatedNode.board.playersFolding[i] = False
-            #     simulatedNode.board.playersAllIn[i] = False
-            # print("Simulate phase: " + str(simulatedNode.board.phase))
-            community = []
-            for card in simulatedNode.board.community:
-                community.append(Card(card.value, card.suit))
-            # community = copy.deepcopy(simulatedNode.board.community) #copy current community, should be the real-time community card
-            #create newly randomized deck
-            randDeck = Deck(True, None)
-            #remove cards that are in the agent's hand and community
-            removeCards = simulatedNode.board.players[self.root.board.activePlayerIndex].cardsInHand + self.root.board.community
-            #remove cards that are in the agent's hand
-            for card_in_hand in removeCards:
-                    for card in randDeck.cards:
-                        if str(card) == str(card_in_hand):
-                            randDeck.cards.remove(card)
-                            break
-            #provide randomized hand to the non-agent opponent
-            opponentIdx = (self.root.board.activePlayerIndex + 1) % simulatedNode.board.players.__len__()
-            simulatedNode.board.players[opponentIdx].cardsInHand = [randDeck.top(), randDeck.top()]
-
-            simPhaseDiff = simulatedNode.board.phase - self.root.board.phase #see if board is not in same phase as real game
-            if simPhaseDiff > 0: #if simulation is not synced, fill in community cards
-                # print("Simulating phase difference")    
-                if community.__len__() == 0 and simulatedNode.board.phase >= 2: #if past phase 1 and no community cards, add them
-                    for _ in range(3):
-                        # print("Added 3 community card")
-                        community.append(randDeck.top())
-                if community.__len__() == 3 and simulatedNode.board.phase >= 3: #if past phase 2 and only 3 community cards, add them
-                    community.append(randDeck.top())
-                if simulatedNode.board.phase >= 4: # if phase 4 or 5, add last community card
-                    # print("Added community card")
-                    community.append(randDeck.top())
-                    # print("Community length: " + str(len(community)))
-
-            if simulatedNode.board.phase == 5: #if board is in scoring phase, evaluate
-                scores = [None, None] 
-                folded = False
-                for i in range(node.board.players.__len__()):
-                    if node.board.playersFolding[i]: #if player folded, set score to 0 and the other to 1
-                        scores[i] = 0
-                        scores[(i + 1) % 2] = 1
-                        folded = True
-                        break
-                if(not folded): # if no players folded, calculate their score
-                    for pl in node.board.players:
-                        hand = pl.cardsInHand + community
-                        scores[pl.id - 1] = MonteCarloAgent.handScore(hand) 
-                        # I had to adjust this code because handScore expects a 7 card hand and that's not possible if a player folds because the game ends prematurely
-                
-                playerScore = scores[self.root.board.activePlayerIndex]
-                maxScore = max(scores)
-
-                if playerScore != maxScore:
-                    return -1
-                else:
-                    for p in range(len(scores)):
-                        if p != self.root.board.activePlayerIndex and scores[p] == maxScore:
-                            return 0
-                        else: 
-                            return 1 
-            else:
-                end = False
-                while(not end):
-                    # Given board state, determine active player action
-                    # Update board state with active player action
-                    # Keep going until both players are passive
-                    
-                    randomActionIdx = randrange(simulatedNode.availableActions.__len__())
-                    randomAction = simulatedNode.availableActions[randomActionIdx]
-                    # TODO: Perform the action on newBoard!!!
-                    # NOTE: This can likely be done by copying some methods from round, making them static, and then using them.
-                    #       These new static methods should be made in such a way that they can be used in the simulations too!
-                    # print("players passing: ",simulatedNode.board.playersPassing)
-                    
-                    # Handle player action
-                    # print("Random Action: " + str(randomAction) +" player index: "+str(simulatedNode.board.activePlayerIndex))
-                    if randomAction in [Action.MIN_BET,Action.LOW_BET,Action.MID_BET,Action.HIGH_BET]:
-                        self.handleBet(simulatedNode.board,randomAction)
-                    elif randomAction == Action.ALL_IN:
-                        self.handleAllIn(simulatedNode.board)
-                    elif randomAction == Action.OP_MAX:
-                        self.handleOpMax(simulatedNode.board)
-                    elif randomAction == Action.CALL:
-                        self.handleCall(simulatedNode.board)
-                    elif randomAction == Action.CHECK:
-                        # Passing
-                        simulatedNode.board.playersPassing[simulatedNode.board.activePlayerIndex] = True
-                    elif randomAction == Action.FOLD:
-                        # Folded
-                        # print("Player " + str(simulatedNode.board.activePlayerIndex) + " folded")
-                        simulatedNode.board.playersFolding[simulatedNode.board.activePlayerIndex] = True
-                        # Passing
-                        simulatedNode.board.playersPassing[simulatedNode.board.activePlayerIndex] = True
-                        simulatedNode.board.phase = 5
-                        return self.SIMULATE(simulatedNode) 
-
-                    # After accounting for the applied action, it is now the next player's turn
-                    simulatedNode.board.activePlayerIndex += 1
-                    simulatedNode.board.activePlayerIndex = (simulatedNode.board.activePlayerIndex) % simulatedNode.board.players.__len__()
-                    
-                    
-                    
-                    # end = MonteCarloAgent.MCTree.endTurn(simulatedNode.board)
-
-                    # # This method will return True if phase is changed, repeat until it returns false,
-                    # # or if the phase is 5 (end state)
-                    end = MonteCarloAgent.MCTree.phaseChangeCheck(simulatedNode.board)
-                    # phaseChange = True
-                    # while phaseChange:
-                    #     phaseChange = MonteCarloAgent.MCTree.phaseChangeCheck(simulatedNode.board)
-                    #     if simulatedNode.board.phase == 5:
-                    #         phaseChange = False
-
-                    # print("players all in",simulatedNode.board.playersAllIn)
-                    # print("End phase?", end)
-                    # simulatedNode.board.phase += 1 this is done in phaseChangeCheck
-                # Call simulate again but with a new phase
-                simulatedNode.board.community = community
-                return self.SIMULATE(simulatedNode) 
-
-
-            
-
-
-
-            # TODO
-            # NOTE: At the start of each simulation, simulate a new set of unknown cards.
-            #       This means that "newly revealed" community cards will not be stored in nodes of "future"
-            #       phases, if the "real" game state does not have those cards revealed.
-            #       This means that the nodes with "future" phases will not have new community cards,
-            #       and it will be the job of the simulator to know how many cards to simulate and reveal at
-            #       the time of simulation. (phase 1-->0 CC, 2-->3 CC, 3-->4 CC, 4-->5 CC)
-            pass
-
         # Update the child win/loss/tie stats with the result,
         # and propagate the result to all ancestors of the child(simNode) (accounting for player change)
         def BACK_PROPAGATE(self, result, simNode):
@@ -757,24 +607,24 @@ class MonteCarloAgent(Agent):
             return validActions
         
 
-        # This can either be 30 full simulations to determine winrate against the opponent
-        # OR do 5 simulations of your hand to get an average hand score
+        # This can either be 30 full simulations to determine winrate against the opponent (add in commented lines)
+        # OR do 5 simulations of your hand to get an average hand score (current implementation)
         def getPlayoutPolicyActionSimulation(self, board, validActions):
-            cards_in_hand = board.players[board.activePlayerIndex].cardsInHand
-            community_cards = self.root.board.community
-            cards_to_remove = cards_in_hand + community_cards
+            cards_in_hand = board.players[board.activePlayerIndex].cardsInHand # Player current cards
+            community_cards = self.root.board.community # Current community cards
+            cards_to_remove = cards_in_hand + community_cards # Cards we don't want in the deck so we don't get them twice
             # your_wins = 0
             # opponent_wins = 0
             # ties = 0
             simulations = 5
             total_hand_score = 0
             deck = Deck(True, None)
-            for card_to_remove in cards_to_remove:
+            for card_to_remove in cards_to_remove: # Remove cards we don't want to get twice from the deck
                 for card in deck.cards:
                     if card.id == card_to_remove.id:
                         deck.cards.remove(card)
                         break
-            original_cards = deck.cards
+            original_cards = deck.cards # Keep a copy of the cards to use for every simulation to save runtime
             for _ in range(simulations):
                 deck.cards = original_cards.copy()
                 # print(len(deck.cards))
@@ -782,11 +632,11 @@ class MonteCarloAgent(Agent):
                 hand = cards_in_hand + community_cards
                 randomized_community_cards = []
                 for _ in range(5-len(community_cards)):
-                    randomized_community_cards.append(deck.top())
+                    randomized_community_cards.append(deck.top()) # Randomize the rest of the community cards to reach 5
                 # opponent_hand += randomized_community_cards
                 hand += randomized_community_cards
-                hand_score = MonteCarloAgent.handScore(hand)
-                total_hand_score += hand_score
+                hand_score = MonteCarloAgent.handScore(hand) # Score the hand for this simulation
+                total_hand_score += hand_score # Increment the total
                 # opponent_score = MonteCarloAgent.handScore(opponent_hand)
                 # if hand_score > opponent_score:
                 #     your_wins +=1
@@ -797,10 +647,10 @@ class MonteCarloAgent(Agent):
             # your_win_percentage = (your_wins+0.5*ties)/(simulations)
             import random as rnd
             random_number = rnd.random()
-            average_hand_score = total_hand_score/simulations
+            average_hand_score = total_hand_score/simulations # Get the average hand score based on the simulations and act accordingly
             # print("Average hand score: ", average_hand_score)
             # print("Average hand score: ", average_hand_score)
-            if(average_hand_score > 250):
+            if(average_hand_score > 250): # If you have a very good hand, be very aggressive
             # if(your_win_percentage > 0.6):
                 if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                     if(Action.CHECK in validActions):
@@ -813,11 +663,11 @@ class MonteCarloAgent(Agent):
                     if(Action.HIGH_BET in validActions and random2 < 0.5): # 50/50 on high or mid bet
                         return Action.HIGH_BET
                     return Action.MID_BET
-                else:
+                else: # If you can't mid or high bet, must max out opponent or all in
                     if(Action.OP_MAX in validActions):
                         return Action.OP_MAX
                     return Action.ALL_IN
-            if(average_hand_score > 215):
+            if(average_hand_score > 215): # If a fairly good hand, be slightly aggressive
             # if(your_win_percentage > 0.5):
                 if(random_number < 0.3): # some randomness, 30% chance of being passive with a good hand
                     if(Action.CHECK in validActions):
@@ -830,13 +680,13 @@ class MonteCarloAgent(Agent):
                     if(Action.LOW_BET in validActions and random2 < 0.5): # 50/50 on low or min bet
                         return Action.LOW_BET
                     return Action.MIN_BET
-                else:
+                else: # If you can't mid or high bet, must max out opponent or all in
                     if(Action.OP_MAX in validActions):
                         return Action.OP_MAX
                     return Action.ALL_IN
-            elif(average_hand_score > 180):
+            elif(average_hand_score > 180): # If an okay hand, be passive
             # elif(your_win_percentage > 0.4):
-                if(random_number < 0.3): # some randomness, 30% chance of being aggressive with a mid hand
+                if(random_number < 0.3): # some randomness, 30% chance of being aggressive with an okay hand
                     if(Action.MID_BET in validActions):
                         random2 = rnd.random()
                         if(Action.HIGH_BET in validActions and random2 < 0.5): # 50/50 on high or mid bet
@@ -1509,7 +1359,7 @@ class MonteCarloAgent(Agent):
             child = tree.EXPAND(leaf)
             # NOTE: SIMULATE has not been implemented
             # print("simulation", i)
-            result = tree.SIMULATENEW(child)
+            result = tree.SIMULATE(child)
             tree.BACK_PROPAGATE(result, child)
 
         maxNumPlayouts = None

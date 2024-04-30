@@ -108,14 +108,15 @@ class MinimaxAgent(Agent):
     # Returns utility value for a leaf node:
     def getUtility(self,game_state):
         # pot_score is a rating (0.1-100) which determines how high or low is the ammount in pot
-        pot_score = (game_state['minBet']/game_state['pot']) * 100
+        # _refactor: Remove hardcoding => (pot/(num_players * starting_chips)) * 100
+        pot_score = (game_state['pot']/(2 * 100)) * 100
         if pot_score > 100: pot_score = 100
-        if pot_score < 0.1: pot_score = 0.1
+        elif pot_score < 0.1: pot_score = 0.1
 
         # hand_score determines the score of the current hand. This is a range (0.1-100)
         hand_score = self.hand_strength(game_state['community'],self.cardsInHand)
-        if hand_score > 100: hand_score = 100
-        if hand_score < 0.1 or hand_score == None: hand_score = 0.1  
+        if hand_score == None or hand_score < 0.1: hand_score = 0.1  
+        elif hand_score > 100: hand_score = 100
 
         product = hand_score * pot_score
 

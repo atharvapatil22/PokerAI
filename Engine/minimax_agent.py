@@ -5,7 +5,7 @@ import math
 import collections
 from agent import Agent
 from player import Action,BetRatio
-from CONSTANTS import Preflop_Handscores
+from CONSTANTS import Preflop_Handscores,CheckPairTypes
 
 # This agent can only handle 2player poker. It will have to be modified for multiplayer games.
 class MinimaxAgent(Agent):
@@ -267,80 +267,126 @@ class MinimaxAgent(Agent):
                 c1,c2 = key
                 if( (c1==handCard1 and c2==handCard2) or (c1==handCard2 and c2==handCard1)):
                     return val
-            return 0
+            return 0.1
         
         # For Flop,Turn,River phases
         else:
             totalCards = community + cardsInHand
             combinations = list(itertools.combinations(totalCards, 5))
+
+            hand_score = 0.1
+
             for comb in combinations:
                 sorted_hand = sorted(comb, key=lambda card: card.value)
-                if self.is_straight_flush(sorted_hand):
-                    handscore = 100
-                    for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
-                            return handscore
-                        elif i == comb[4].value: 
-                            return handscore - (13/14)
-                elif self.is_four_of_a_kind(sorted_hand)[0]:
-                    handscore = 87
-                    for i in range(14, 0, -1):
-                        if i == self.is_four_of_a_kind(sorted_hand)[1] and i == 14:
-                            return handscore
-                        elif i == self.is_four_of_a_kind(sorted_hand)[1]: 
-                            return handscore - (13/14)
-                elif self.is_full_house(sorted_hand)[0]:
-                    handscore = 74
-                    for i in range(14, 0, -1):
-                        if i == self.is_full_house(sorted_hand)[1] and i == 14:
-                            return handscore
-                        elif i == self.is_full_house(sorted_hand)[1]: 
-                            return handscore - (13/14)
+
+                # The probabilities of the first 6 ranks is less than 1%, so directly return if these are encountered
+                if self.is_royal_flush(sorted_hand):
+                    return 100
+                elif self.is_straight_flush(sorted_hand):
+                    return 98
+                elif self.is_four_of_a_kind(sorted_hand):
+                    return 96
+                elif self.is_full_house(sorted_hand):
+                    return 94
                 elif self.is_flush(sorted_hand):
-                    handscore = 61
-                    for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
-                            return handscore
-                        elif i == comb[4].value: 
-                            return handscore - (13/14)
+                    return 92
                 elif self.is_straight(sorted_hand):
-                    handscore = 48
-                    for i in range(14, 0, -1):
-                        if i == comb[4].value and i == 14:
-                            return handscore
-                        elif i == comb[4].value: 
-                            return handscore - (13/14)
-                elif self.is_three_of_a_kind(sorted_hand)[0]:
-                    handscore = 35
-                    for i in range(14, 0, -1):
-                        if i == self.is_three_of_a_kind(sorted_hand)[1] and i == 14:
-                            return handscore
-                        elif i == self.is_three_of_a_kind(sorted_hand)[1]: 
-                            return handscore - (13/14)
-                elif self.is_two_pair(sorted_hand):
-                    handscore = 22
-                    for i in range(14, 0, -1):
-                        if i == comb[3].value and i == 14:
-                            return handscore
-                        elif i == comb[3].value: 
-                            return handscore - (13/14)
-                elif self.is_one_pair(sorted_hand):
-                    # handscore = 9
-                    # for i in range(14, 0, -1):
-                    #     if i == self.is_one_pair(sorted_hand)[1] and i == 14:
-                    #         return handscore
-                    #     elif i == self.is_one_pair(sorted_hand)[1]: 
-                    #         return handscore - (9/14)
-                    handscore = 7
-                    highest_card = float('-inf')
-                    for card in sorted_hand:
-                        if card.value > highest_card:
-                            highest_card = card.value
-                    return handscore + ((highest_card/14)*4)
-                else:
-                    return 0
+                    return 90
+                
+                # For the following ranks, dont return directly
+                pairs_response = self.check_pairs(sorted_hand)
+
+                if pairs_response['type'] == CheckPairTypes.THREE_KIND:
+                    temp_score = 80
+                    hand_score = max(hand_score,temp_score)
+                elif pairs_response['type'] == CheckPairTypes.TWO_PAIR:
+                    pair_value = pairs_response['pairedCards'][0] + pairs_response['pairedCards'][1]
+                    temp_score = self.transformRange(pair_value,[0,24],[60,80])
+                    hand_score = max(hand_score,temp_score)
+                elif pairs_response['type'] == CheckPairTypes.ONE_PAIR:
+                    temp_score = self.transformRange(pairs_response['pairedCards'][0],[0,12],[30,60])
+                    hand_score = max(hand_score,temp_score)
+                # case for high card
+                elif pairs_response['type'] == None:
+                    temp_score = self.transformRange(pairs_response['highestCard'],[0,12],[0,30])
+                    hand_score = max(hand_score,temp_score)
+                
+            return hand_score
+        
+            # --------- ⬇ OLD HAND SCORE LOGIC ⬇ ---------
+            # for comb in combinations:
+            #     sorted_hand = sorted(comb, key=lambda card: card.value)
+            #     if self.is_straight_flush(sorted_hand):
+            #         handscore = 100
+            #         for i in range(14, 0, -1):
+            #             if i == comb[4].value and i == 14:
+            #                 return handscore
+            #             elif i == comb[4].value: 
+            #                 return handscore - (13/14)
+            #     elif self.is_four_of_a_kind(sorted_hand)[0]:
+            #         handscore = 87
+            #         for i in range(14, 0, -1):
+            #             if i == self.is_four_of_a_kind(sorted_hand)[1] and i == 14:
+            #                 return handscore
+            #             elif i == self.is_four_of_a_kind(sorted_hand)[1]: 
+            #                 return handscore - (13/14)
+            #     elif self.is_full_house(sorted_hand)[0]:
+            #         handscore = 74
+            #         for i in range(14, 0, -1):
+            #             if i == self.is_full_house(sorted_hand)[1] and i == 14:
+            #                 return handscore
+            #             elif i == self.is_full_house(sorted_hand)[1]: 
+            #                 return handscore - (13/14)
+            #     elif self.is_flush(sorted_hand):
+            #         handscore = 61
+            #         for i in range(14, 0, -1):
+            #             if i == comb[4].value and i == 14:
+            #                 return handscore
+            #             elif i == comb[4].value: 
+            #                 return handscore - (13/14)
+            #     elif self.is_straight(sorted_hand):
+            #         handscore = 48
+            #         for i in range(14, 0, -1):
+            #             if i == comb[4].value and i == 14:
+            #                 return handscore
+            #             elif i == comb[4].value: 
+            #                 return handscore - (13/14)
+            #     elif self.is_three_of_a_kind(sorted_hand)[0]:
+            #         handscore = 35
+            #         for i in range(14, 0, -1):
+            #             if i == self.is_three_of_a_kind(sorted_hand)[1] and i == 14:
+            #                 return handscore
+            #             elif i == self.is_three_of_a_kind(sorted_hand)[1]: 
+            #                 return handscore - (13/14)
+            #     elif self.is_two_pair(sorted_hand):
+            #         handscore = 22
+            #         for i in range(14, 0, -1):
+            #             if i == comb[3].value and i == 14:
+            #                 return handscore
+            #             elif i == comb[3].value: 
+            #                 return handscore - (13/14)
+            #     elif self.is_one_pair(sorted_hand):
+            #         # handscore = 9
+            #         # for i in range(14, 0, -1):
+            #         #     if i == self.is_one_pair(sorted_hand)[1] and i == 14:
+            #         #         return handscore
+            #         #     elif i == self.is_one_pair(sorted_hand)[1]: 
+            #         #         return handscore - (9/14)
+            #         handscore = 7
+            #         highest_card = float('-inf')
+            #         for card in sorted_hand:
+            #             if card.value > highest_card:
+            #                 highest_card = card.value
+            #         return handscore + ((highest_card/14)*4)
+            #     else:
+            #         return 0
+            # --------- ⬆ OLD HAND SCORE LOGIC ⬆ --------- 
     
-    
+    def is_royal_flush(self,hand):
+        if all(card.value > 9 for card in hand) and self.is_flush(hand) and self.is_straight(hand):
+            return True
+        else: return False
+
     def is_straight_flush(self,hand):
         suits_set = set(card.suit for card in hand)
         if len(suits_set) == 1:
@@ -383,43 +429,75 @@ class MinimaxAgent(Agent):
                 return False
         return True
 
-    def is_three_of_a_kind(self,hand):
-        # Check for Three of a Kind logic
-        rank_counts = [0] * 13
-        for card in hand:
-            rank_counts[card.value-2] += 1
-        for index,count in enumerate(rank_counts):
-            if count == 3:
-                return True, index 
-        return False, -1
-
-    def is_two_pair(self,hand):
-        # Check for Two Pair logic
-        rank_counts = collections.Counter(card.value for card in hand)
-        num_pairs = 0
-        for count in rank_counts.items():
-            if count == 2:
-                num_pairs += 1
-        return num_pairs == 2
-
-    def is_one_pair(self,hand):
-        # Check for One Pair logic
-        rank_counts = [0] * 13
+    # Function will check if a hand has THREE_KIND or TWO_PAIR or ONE_PAIR and return the paired cards, if no pairs are found it will return the highest card
+    # returns: {'type': THREE_KIND/TWO_PAIR/ONE_PAIR/None ,'pairedCards': list,'highestCard':value}
+    def check_pairs(self,hand):
         
+        # Encode cards into a rank counts list like this:
+        # Card Vals ->   #2 3 4 5 6 7 8 9 10 J Q K A
+        # rank_counts -> [0,0,0,1,0,0,1,0,2, 0,1,0,0]
+        rank_counts = [0] * 13
         for card in hand:
             rank_counts[card.value-2] += 1
+
+        response = {'type':None ,'pairedCards':[],'highestCard':None}
+        pair_found = False 
+        
         for index,count in enumerate(rank_counts):
-            if count == 2:
-                return True, index 
-        return False, -1
-                    
+            # if three of a kind is found return immediately
+            if count == 3:
+                response['type'] = CheckPairTypes.THREE_KIND
+                response['pairedCards'].append(index)
+                return response
+            # if two of a kind is found, check for more pairs
+            elif count == 2:
+                if not pair_found:
+                    pair_found = True
+                    response['type'] = CheckPairTypes.ONE_PAIR
+                    response['pairedCards'].append(index)
+                else:
+                    response['type'] = CheckPairTypes.TWO_PAIR
+                    response['pairedCards'].append(index)
+                    return response
+            # keep updating the highest card. This will be returned if no pairs are found
+            elif count == 1 and not pair_found:
+                response['highestCard'] = index 
+        
+        return response  
+
+
+    # --------- ⬇ OLD HAND SCORE LOGIC ⬇ ---------
+    # def is_three_of_a_kind(self,hand):
+    #     # Check for Three of a Kind logic
+    #     rank_counts = [0] * 13
+    #     for card in hand:
+    #         rank_counts[card.value-2] += 1
+    #     for index,count in enumerate(rank_counts):
+    #         if count == 3:
+    #             return True, index 
+    #     return False, -1
+
+    # def is_two_pair(self,hand):
+    #     # Check for Two Pair logic
+    #     rank_counts = collections.Counter(card.value for card in hand)
+    #     num_pairs = 0
+    #     for count in rank_counts.items():
+    #         if count == 2:
+    #             num_pairs += 1
+    #     return num_pairs == 2
+
+    # def is_one_pair(self,hand):
+    #     # Check for One Pair logic
+    #     rank_counts = [0] * 13
+        
+    #     for card in hand:
+    #         rank_counts[card.value-2] += 1
+    #     for index,count in enumerate(rank_counts):
+    #         if count == 2:
+    #             return True, index 
+    #     return False, -1
+    # --------- ⬆ OLD HAND SCORE LOGIC ⬆ ---------          
             
-            
-            
-# boardz = { "pot" :75 , "currentBet":50,"community":[Card(10,'Hearts'),Card(2,'Spades'),Card(7,'Spades')],'minBet':25,'playerBets':[25,50],'players':[{'chips':100},{'chips':100}],'playersPassing':[False,False]}  
-# temp = MinimaxAgent()
-# res = temp.get_action(boardz,None)
-# print("You should take this action",res)
 
 
 

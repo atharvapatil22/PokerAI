@@ -1,0 +1,2 @@
+Game 1 Sequences: ['3 Sp', 'J Cl', '6 Di', '2 Di', '8 Cl', '6 Cl', '7 Di', '9 He', 'Q Di'], ['A Di', '1 Sp', 'A Sp', 'T Di', '8 He', 'Q He', '8 Cl', '3 He', 'A Cl']
+Game 2 Sequences: ['3 Di', '4 Cl', 'A He', '1 He', '8 Di', 'A Cl', 'K Sp', '3 Cl', '3 Sp'], ['T Cl', '3 Sp', '8 Cl', '7 Di', '1 Di', '8 Sp', 'A He', '3 Cl', 'J Di']
